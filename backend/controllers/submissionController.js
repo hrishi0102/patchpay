@@ -100,7 +100,7 @@ const getResearcherSubmissions = async (req, res) => {
 };
 
 // @desc    Review submission (accept or reject)
-// @route   PUT /api/submissions/:id/review
+// @route   PUT /api/submissions/:id/review (:id of submission)
 // @access  Private/Company
 const reviewSubmission = async (req, res) => {
   try {
