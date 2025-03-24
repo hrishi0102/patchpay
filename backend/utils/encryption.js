@@ -8,7 +8,8 @@ const encryptData = (text) => {
   }
   
   const iv = crypto.randomBytes(16);
-  const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+  // Make sure the key is exactly 32 bytes (256 bits)
+  const key = crypto.scryptSync(process.env.ENCRYPTION_KEY, 'salt', 32);
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   
   let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -26,7 +27,8 @@ const decryptData = (encryptedObj) => {
     throw new Error('ENCRYPTION_KEY environment variable not set');
   }
   
-  const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+  // Make sure the key is exactly 32 bytes (256 bits)
+  const key = crypto.scryptSync(process.env.ENCRYPTION_KEY, 'salt', 32);
   const iv = Buffer.from(encryptedObj.iv, 'hex');
   const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
   
