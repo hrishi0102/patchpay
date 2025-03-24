@@ -5,6 +5,12 @@ const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./db');
 
+// Route imports
+const authRoutes = require('./routes/authRoutes');
+const bugRoutes = require('./routes/bugRoutes');
+const submissionRoutes = require('./routes/submissionRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+
 // Initialize Express app
 const app = express();
 
@@ -16,12 +22,16 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/bugs', bugRoutes);
+app.use('/api/submissions', submissionRoutes);
+app.use('/api/notifications', notificationRoutes);
+
 // Basic route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Bug Bounty Platform API' });
 });
-
-// Define routes here (will add later)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
