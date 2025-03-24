@@ -40,9 +40,9 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   };
   
   // Method to hash password
-  UserSchema.statics.hashPassword = async function(password) {
+UserSchema.statics.hashPassword = async function(password) {
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
   };
   
-  module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User', UserSchema);
