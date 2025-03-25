@@ -29,64 +29,68 @@ const CompanyDashboard = () => {
     }
 
     const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch company bugs
-        const bugsResponse = await api.get('/bugs/company/list');
-        const bugs = bugsResponse.data;
-        
-        // Set recent bugs (most recent 3)
-        setRecentBugs(bugs.slice(0, 3));
-        
-        // Calculate active bugs (open or in_progress)
-        const activeBugs = bugs.filter(bug => 
-          bug.status === 'open' || bug.status === 'in_progress').length;
-        
-        // Count pending submissions for each bug
-        let pendingSubmissionsCount = 0;
-        for (const bug of bugs) {
-          try {
-            const submissionsResponse = await api.get(`/submissions/bug/${bug._id}`);
-            const pendingSubmissions = submissionsResponse.data.filter(
-              submission => submission.status === 'pending'
-            );
-            pendingSubmissionsCount += pendingSubmissions.length;
-          } catch (error) {
-            console.error(`Error fetching submissions for bug ${bug._id}:`, error);
+        try {
+          setLoading(true);
+          
+          // Fetch company bugs
+          const bugsResponse = await api.get('/bugs/company/list');
+          const bugs = bugsResponse.data;
+          
+          // Set recent bugs (most recent 3)
+          setRecentBugs(bugs.slice(0, 3));
+          
+          // Calculate active bugs (open or in_progress)
+          const activeBugs = bugs.filter(bug => 
+            bug.status === 'open' || bug.status === 'in_progress').length;
+          
+          // Count pending submissions for each bug
+          let pendingSubmissionsCount = 0;
+          for (const bug of bugs) {
+            try {
+              const submissionsResponse = await api.get(`/submissions/bug/${bug._id}`);
+              const pendingSubmissions = submissionsResponse.data.filter(
+                submission => submission.status === 'pending'
+              );
+              pendingSubmissionsCount += pendingSubmissions.length;
+            } catch (error) {
+              console.error(`Error fetching submissions for bug ${bug._id}:`, error);
+            }
           }
-        }
-        
-        // Update stats with bug and submission counts
-        setStats(prev => ({
-          ...prev,
-          activeBugs,
-          pendingSubmissions: pendingSubmissionsCount
-        }));
-        
-        // If the company has provided an API key, try to fetch their Payman balance
-        if (user.paymanApiKey) {
-          try {
-            // This endpoint would need to be implemented in your backend
-            const balanceResponse = await api.get('/auth/balance');
-            setStats(prev => ({
-              ...prev,
-              balance: balanceResponse.data.balance || 0
-            }));
-          } catch (error) {
-            console.error('Error fetching balance:', error);
-            // Default balance to 0 if we can't fetch it
-            setStats(prev => ({ ...prev, balance: 0 }));
+          
+          // Update stats with bug and submission counts
+          setStats(prev => ({
+            ...prev,
+            activeBugs,
+            pendingSubmissions: pendingSubmissionsCount
+          }));
+          
+          // Fetch balance if API key is set
+          if (user.paymanApiKey) {
+            try {
+              const balanceResponse = await api.get('/auth/balance');
+              
+              if (balanceResponse.data && typeof balanceResponse.data.balance === 'number') {
+                setStats(prev => ({
+                  ...prev,
+                  balance: balanceResponse.data.balance
+                }));
+              }
+            } catch (error) {
+              console.error('Error fetching balance:', error);
+              // Show a non-intrusive warning to the user
+              toast.error('Could not fetch wallet balance. Please check your API key.', {
+                duration: 4000,
+                position: 'bottom-right'
+              });
+            }
           }
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+          toast.error('Failed to load dashboard data');
+        } finally {
+          setLoading(false);
         }
-        
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
     
     fetchDashboardData();
   }, [user, navigate]);
@@ -115,10 +119,16 @@ const CompanyDashboard = () => {
               <div className="text-gray-400">Pending Submissions</div>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-              <div className="text-2xl font-bold text-white">
-                {loading ? '...' : `$${stats.balance.toFixed(2)}`}
-              </div>
-              <div className="text-gray-400">Balance</div>
+            <div className="text-2xl font-bold text-white">
+                {loading ? (
+                <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent"></div>
+                ) : user.paymanApiKey ? (
+                `$${stats.balance.toFixed(2)}`
+                ) : (
+                'Not Available'
+                )}
+            </div>
+            <div className="text-gray-400">Balance</div>
             </div>
           </div>
         </div>

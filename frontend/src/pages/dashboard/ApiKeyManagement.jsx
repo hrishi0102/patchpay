@@ -1,17 +1,41 @@
-// src/pages/dashboard/ApiKeyManagement.jsx
-import { useState } from 'react';
+// src/pages/dashboard/ApiKeyManagement.jsx - Update component
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaKey, FaSave } from 'react-icons/fa';
+import { FaKey, FaSave, FaCheckCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { authService } from '../../services/auth.service';
+import api from '../../services/api';
 
 const ApiKeyManagement = () => {
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
+  const [keyStatus, setKeyStatus] = useState('unknown'); // 'unknown', 'valid', 'invalid'
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Check if API key is already set and valid
+  useEffect(() => {
+    const checkApiKey = async () => {
+      if (!user || !user.paymanApiKey) {
+        setKeyStatus('unknown');
+        return;
+      }
+      
+      try {
+        // Try to fetch balance to verify the key works
+        await api.get('/auth/balance');
+        setKeyStatus('valid');
+      } catch (error) {
+        console.error('API key validation error:', error);
+        setKeyStatus('invalid');
+      }
+    };
+    
+    checkApiKey();
+  }, [user]);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,10 +49,18 @@ const ApiKeyManagement = () => {
     try {
       await authService.updateApiKey(apiKey);
       toast.success('API key updated successfully');
-      // Navigate to dashboard after successful update
-      navigate('/dashboard/company');
+      setKeyStatus('valid');
+      
+      // Optionally verify the key immediately
+      try {
+        await api.get('/auth/balance');
+      } catch (keyError) {
+        setKeyStatus('invalid');
+        toast.error('API key saved but appears to be invalid. Please check the key and try again.');
+      }
     } catch (error) {
       toast.error(error.message || 'Failed to update API key');
+      setKeyStatus('invalid');
     } finally {
       setLoading(false);
     }
@@ -37,7 +69,21 @@ const ApiKeyManagement = () => {
   return (
     <DashboardLayout userRole="company">
       <div className="card">
-        <h2 className="text-2xl font-bold text-white mb-4">API Key Management</h2>
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-2xl font-bold text-white">API Key Management</h2>
+          {keyStatus === 'valid' && (
+            <div className="flex items-center text-green-500">
+              <FaCheckCircle className="mr-2" />
+              <span>Valid API Key</span>
+            </div>
+          )}
+          {keyStatus === 'invalid' && (
+            <div className="flex items-center text-red-500">
+              <span>Invalid API Key</span>
+            </div>
+          )}
+        </div>
+        
         <p className="text-gray-300 mb-6">
           Configure your PaymanAI API keys to enable bug bounty payments. This key is required before posting bug bounties.
         </p>
@@ -76,6 +122,30 @@ const ApiKeyManagement = () => {
             </button>
           </div>
         </form>
+        
+        {keyStatus === 'valid' && (
+          <div className="mt-8 bg-gray-800 p-4 rounded-lg border border-green-600">
+            <h3 className="text-lg font-medium text-white mb-2">API Key Status: Valid</h3>
+            <p className="text-gray-300">
+              Your PaymanAI API key is valid and working correctly. You can now post bug bounties and process payments.
+            </p>
+            <button 
+              onClick={() => navigate('/dashboard/company')}
+              className="btn btn-outline mt-4"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        )}
+        
+        {keyStatus === 'invalid' && (
+          <div className="mt-8 bg-gray-800 p-4 rounded-lg border border-red-600">
+            <h3 className="text-lg font-medium text-white mb-2">API Key Status: Invalid</h3>
+            <p className="text-gray-300">
+              There was an issue with your API key. Please check that you've entered it correctly and try again.
+            </p>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
