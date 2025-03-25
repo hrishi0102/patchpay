@@ -2,17 +2,21 @@
 const express = require('express');
 const router = express.Router();
 const { 
-  createBug, 
+  createBug,
+  getAllBugs,
   getBugs, 
   getBugById, 
+  getBugsWithFilters,
   updateBugStatus, 
   getCompanyBugs 
 } = require('../controllers/bugController');
 const { protect, isCompany } = require('../middleware/auth');
 
 // Public routes
+router.get('/all', getAllBugs);
 router.get('/', getBugs);
 router.get('/:id', getBugById);
+router.get('/filters', getBugsWithFilters);
 
 // Company routes
 router.post('/', protect, isCompany, createBug);

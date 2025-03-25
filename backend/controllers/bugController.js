@@ -50,12 +50,61 @@ const createBug = async (req, res) => {
   }
 };
 
-// @desc    Get all bugs
+// @desc    Get all bugs (regardless of status)
+// @route   GET /api/bugs/all
+// @access  Public
+const getAllBugs = async (req, res) => {
+  try {
+    const bugs = await Bug.find({})
+      .populate('companyId', 'name email')
+      .sort({ createdAt: -1 });
+    
+    res.json(bugs);
+  } catch (error) {
+    console.error('Get all bugs error:', error);
+    res.status(500).json({ message: 'Failed to fetch bugs', error: error.message });
+  }
+};
+
+// @desc    Get all open bugs
 // @route   GET /api/bugs
 // @access  Public
 const getBugs = async (req, res) => {
   try {
     const bugs = await Bug.find({ status: 'open' })
+      .populate('companyId', 'name email')
+      .sort({ createdAt: -1 });
+    
+    res.json(bugs);
+  } catch (error) {
+    console.error('Get bugs error:', error);
+    res.status(500).json({ message: 'Failed to fetch bugs', error: error.message });
+  }
+};
+
+// @desc    Get bugs with optional filters
+// @route   GET /api/bugs
+// @access  Public
+const getBugsWithFilters = async (req, res) => {
+  try {
+    const { status, severity } = req.query;
+    
+    // Build filter object
+    const filter = {};
+    
+    // Filter by status if provided, otherwise default to open bugs
+    if (status) {
+      filter.status = status;
+    } else {
+      filter.status = 'open';
+    }
+    
+    // Add severity filter if provided
+    if (severity) {
+      filter.severity = severity;
+    }
+    
+    const bugs = await Bug.find(filter)
       .populate('companyId', 'name email')
       .sort({ createdAt: -1 });
     
@@ -137,7 +186,9 @@ const getCompanyBugs = async (req, res) => {
 
 module.exports = {
   createBug,
+  getAllBugs,
   getBugs,
+  getBugsWithFilters,
   getBugById,
   updateBugStatus,
   getCompanyBugs
