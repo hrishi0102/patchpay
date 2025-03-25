@@ -141,9 +141,42 @@ const updatePaymanApiKey = async (req, res) => {
   }
 };
 
+// @desc    Get company's Payman balance
+// @route   GET /api/auth/balance
+// @access  Private/Company
+const getBalance = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    if (!user.paymanApiKey) {
+      return res.status(400).json({ message: 'Payman API key not set' });
+    }
+    
+    // Import the functions needed to check balance
+    const { createPaymanClient, getBalance } = require('../utils/paymanService');
+    
+    // Create Payman client with the company's API key
+    const paymanClient = await createPaymanClient(user.paymanApiKey);
+    
+    // Get the balance (TSD = Test dollars)
+    const balance = await getBalance(paymanClient, 'TSD');
+    
+    res.json({ balance });
+  } catch (error) {
+    console.error('Get balance error:', error);
+    res.status(500).json({ message: 'Failed to get balance', error: error.message });
+  }
+};
+
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  updatePaymanApiKey
+  updatePaymanApiKey,
+  getBalance
 };

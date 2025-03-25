@@ -5,6 +5,7 @@ const {
   registerUser, 
   loginUser, 
   getUserProfile,
+  getBalance,
   updatePaymanApiKey
 } = require('../controllers/authController');
 const { protect, isCompany } = require('../middleware/auth');
@@ -16,5 +17,6 @@ router.post('/login', loginUser);
 // Protected routes
 router.get('/profile', protect, getUserProfile);
 router.put('/update-api-key', protect, isCompany, updatePaymanApiKey);
+router.get('/balance', protect, isCompany, getBalance);
 
 module.exports = router;
