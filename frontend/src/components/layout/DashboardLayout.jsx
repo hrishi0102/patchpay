@@ -1,6 +1,6 @@
 // src/components/layout/DashboardLayout.jsx
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt, FaClipboardCheck } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 
 const DashboardLayout = ({ userRole, children }) => {
@@ -41,7 +41,7 @@ const DashboardLayout = ({ userRole, children }) => {
                 {isCompany ? 'My Bugs' : 'Bug Listings'}
               </Link>
             </li>
-            {isCompany && (
+            {isCompany ? (
               <li>
                 <Link 
                   to="/dashboard/company/api-key"
@@ -51,16 +51,17 @@ const DashboardLayout = ({ userRole, children }) => {
                   API Key Management
                 </Link>
               </li>
+            ) : (
+              <li>
+                <Link 
+                  to="/dashboard/researcher/submissions"
+                  className="flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors"
+                >
+                  <FaClipboardCheck className="mr-3" />
+                  My Submissions
+                </Link>
+              </li>
             )}
-            <li>
-              <Link 
-                to={`/dashboard/${userRole}/notifications`}
-                className="flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors"
-              >
-                <FaBell className="mr-3" />
-                Notifications
-              </Link>
-            </li>
             <li>
               <button 
                 onClick={handleLogout}

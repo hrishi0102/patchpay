@@ -26,13 +26,20 @@ const BugListings = () => {
         if (isCompany) {
           response = await api.get('/bugs/company/list');
         } else {
-          // For researchers, use status and severity filters
-          const params = {};
-          if (filter.status) params.status = filter.status;
-          if (filter.severity) params.severity = filter.severity;
+          // For researchers, get open bugs by default or use the filter
+          let endpoint = '/bugs/all';
           
-          // Use the getBugsWithFilters endpoint
-          response = await api.get('/bugs/filters', { params });
+          // If status or severity filter is applied, use the filter endpoint
+          if (filter.status !== 'open' || filter.severity) {
+            const params = {};
+            if (filter.status) params.status = filter.status;
+            if (filter.severity) params.severity = filter.severity;
+            
+            response = await api.get('/bugs/all', { params });
+          } else {
+            // Default: fetch open bugs
+            response = await api.get('/bugs/all');
+          }
         }
         
         setBugs(response.data);

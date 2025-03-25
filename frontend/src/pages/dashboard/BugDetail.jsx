@@ -1,7 +1,7 @@
 // src/pages/dashboard/BugDetail.jsx
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaEdit, FaExclamationTriangle } from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaExclamationTriangle, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,7 @@ const BugDetail = () => {
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [userHasSubmitted, setUserHasSubmitted] = useState(false);
   
   const isCompany = user?.role === 'company';
   const isOwner = isCompany && bug?.companyId?._id === user?._id;
@@ -37,6 +38,19 @@ const BugDetail = () => {
             console.error('Error fetching submissions:', error);
           } finally {
             setLoadingSubmissions(false);
+          }
+        }
+        
+        // If this is a researcher, check if they've already submitted
+        if (!isCompany) {
+          try {
+            const researcherSubmissionsResponse = await api.get('/submissions/researcher');
+            const hasSubmitted = researcherSubmissionsResponse.data.some(
+              submission => submission.bugId._id === id
+            );
+            setUserHasSubmitted(hasSubmitted);
+          } catch (error) {
+            console.error('Error checking researcher submissions:', error);
           }
         }
       } catch (error) {
@@ -125,6 +139,31 @@ const BugDetail = () => {
       toast.error(error.response?.data?.message || 'Failed to review submission. Please try again.');
     }
   };
+
+  // Get status message for researchers
+  const getBugStatusMessage = () => {
+    if (bug.status === 'closed') {
+      return {
+        icon: <FaCheckCircle className="text-green-500 mr-2" />,
+        message: "This bug has been fixed and is now closed.",
+        color: "border-green-600"
+      };
+    } else if (bug.status === 'in_progress') {
+      return {
+        icon: <FaExclamationTriangle className="text-yellow-500 mr-2" />,
+        message: "This bug is currently being reviewed by the company.",
+        color: "border-yellow-600"
+      };
+    } else {
+      return {
+        icon: <FaExclamationTriangle className="text-blue-500 mr-2" />,
+        message: "This bug is open for submissions.",
+        color: "border-blue-600"
+      };
+    }
+  };
+  
+  const statusInfo = getBugStatusMessage();
   
   return (
     <DashboardLayout userRole={user?.role}>
@@ -187,18 +226,48 @@ const BugDetail = () => {
       </div>
       
       {/* Researcher actions */}
-      {!isCompany && bug.status === 'open' && (
+      {!isCompany && (
         <div className="card">
-          <h2 className="text-lg font-medium text-white mb-4">Submit a Fix</h2>
-          <p className="text-gray-300 mb-4">
-            If you have a solution for this bug, you can submit a fix and potentially earn the reward.
-          </p>
-          <Link 
-            to={`/dashboard/researcher/submissions/create?bugId=${bug._id}`}
-            className="btn btn-primary"
-          >
-            Submit Fix
-          </Link>
+          <h2 className="text-lg font-medium text-white mb-4">Submission Status</h2>
+          
+          <div className={`p-4 rounded-md border ${statusInfo.color} bg-gray-800/50 flex items-center mb-6`}>
+            {statusInfo.icon}
+            <span className="text-gray-200">{statusInfo.message}</span>
+          </div>
+          
+          {userHasSubmitted ? (
+            <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
+              <div className="flex items-center">
+                <FaCheckCircle className="text-green-500 mr-2" />
+                <p className="text-white">You have already submitted a fix for this bug.</p>
+              </div>
+              <Link 
+                to="/dashboard/researcher/submissions"
+                className="btn btn-outline mt-4"
+              >
+                View My Submissions
+              </Link>
+            </div>
+          ) : bug.status === 'open' ? (
+            <div>
+              <p className="text-gray-300 mb-4">
+                If you have a solution for this bug, you can submit a fix and potentially earn the reward.
+              </p>
+              <Link 
+                to={`/dashboard/researcher/submissions/create?bugId=${bug._id}`}
+                className="btn btn-primary"
+              >
+                Submit Fix
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
+              <div className="flex items-center">
+                <FaTimesCircle className="text-red-500 mr-2" />
+                <p className="text-white">This bug is no longer accepting submissions.</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
       
@@ -229,7 +298,7 @@ const BugDetail = () => {
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       submission.status === 'approved' ? 'bg-green-600 text-white' : 
                       submission.status === 'rejected' ? 'bg-red-600 text-white' : 
-                      'bg-gray-600 text-white'
+                      'bg-yellow-600 text-white'
                     }`}>
                       {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                     </span>
@@ -276,6 +345,6 @@ const BugDetail = () => {
       )}
     </DashboardLayout>
   );
- };
- 
- export default BugDetail;
+};
+
+export default BugDetail;

@@ -19,6 +19,8 @@ import ApiKeyManagement from './pages/dashboard/ApiKeyManagement';
 import BugListings from './pages/dashboard/BugListings';
 import CreateBug from './pages/dashboard/CreateBug';
 import BugDetail from './pages/dashboard/BugDetail';
+import CreateSubmission from './pages/dashboard/createSubmission';
+import ResearcherSubmissions from './pages/dashboard/ResearcherSubmissions';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -46,6 +48,8 @@ function App() {
           {/* Protected researcher routes */}
           <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
           <Route path="/dashboard/researcher/bugs" element={<BugListings />} />
+          <Route path="/dashboard/researcher/submissions" element={<ResearcherSubmissions />} />
+          <Route path="/dashboard/researcher/submissions/create" element={<CreateSubmission />} />
           
           {/* Shared routes that work for both user types */}
           <Route path="/dashboard/bugs/:id" element={<BugDetail />} />
