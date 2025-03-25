@@ -81,6 +81,7 @@ const loginUser = async (req, res) => {
       email: user.email,
       role: user.role,
       walletId: user.walletId,
+      paymanApiKey: user.paymanApiKey ? true : null,
       token
     });
   } catch (error) {
