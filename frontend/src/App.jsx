@@ -1,15 +1,26 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
+// Layouts
 import Layout from './components/layout/Layout';
+
+// Public Pages
 import Home from './pages/Home';
 import Sponsor from './pages/Sponsor';
 import Login from './pages/Login';
 import Register from './pages/Register';
+
+// Protected Components & Pages
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import CompanyDashboard from './pages/dashboard/CompanyDashboard';
 import ResearcherDashboard from './pages/dashboard/ResearcherDashboard';
 import ApiKeyManagement from './pages/dashboard/ApiKeyManagement';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import BugListings from './pages/dashboard/BugListings';
+import CreateBug from './pages/dashboard/CreateBug';
+import BugDetail from './pages/dashboard/BugDetail';
+
+// Context
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -27,15 +38,17 @@ function App() {
           </Route>
           
           {/* Protected company routes */}
-          <Route element={<ProtectedRoute roleRequired="company" />}>
-            <Route path="/dashboard/company" element={<CompanyDashboard />} />
-            <Route path="/dashboard/company/api-key" element={<ApiKeyManagement />} />
-          </Route>
+          <Route path="/dashboard/company" element={<CompanyDashboard />} />
+          <Route path="/dashboard/company/api-key" element={<ApiKeyManagement />} />
+          <Route path="/dashboard/company/bugs" element={<BugListings />} />
+          <Route path="/dashboard/company/bugs/create" element={<CreateBug />} />
           
           {/* Protected researcher routes */}
-          <Route element={<ProtectedRoute roleRequired="researcher" />}>
-            <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
-          </Route>
+          <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
+          <Route path="/dashboard/researcher/bugs" element={<BugListings />} />
+          
+          {/* Shared routes that work for both user types */}
+          <Route path="/dashboard/bugs/:id" element={<BugDetail />} />
         </Routes>
       </Router>
     </AuthProvider>

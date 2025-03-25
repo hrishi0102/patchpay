@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 
-const DashboardLayout = ({ userRole }) => {
+const DashboardLayout = ({ userRole, children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
@@ -87,7 +87,7 @@ const DashboardLayout = ({ userRole }) => {
           </div>
         </header>
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
