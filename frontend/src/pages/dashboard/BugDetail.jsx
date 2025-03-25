@@ -90,6 +90,41 @@ const BugDetail = () => {
   }
   
   if (!bug) return null;
+
+  const handleReviewSubmission = async (submissionId, status) => {
+    try {
+      const confirmMessage = status === 'approved' 
+        ? 'Are you sure you want to approve this submission? This will process payment to the researcher and close the bug.'
+        : 'Are you sure you want to reject this submission? This will allow other researchers to continue working on this bug.';
+      
+      if (!window.confirm(confirmMessage)) {
+        return; // User cancelled the action
+      }
+      
+      const response = await api.put(`/submissions/${submissionId}/review`, {
+        status,
+        feedback: status === 'rejected' ? 'Submission rejected by company.' : 'Submission approved by company.'
+      });
+      
+      // Update the local state to reflect the change
+      setSubmissions(prevSubmissions => 
+        prevSubmissions.map(sub => 
+          sub._id === submissionId ? { ...sub, status } : sub
+        )
+      );
+      
+      // If the submission was approved, also update the bug status
+      if (status === 'approved') {
+        setBug(prevBug => ({ ...prevBug, status: 'closed' }));
+        toast.success('Submission approved and payment processed!');
+      } else {
+        toast.success('Submission rejected.');
+      }
+    } catch (error) {
+      console.error('Error reviewing submission:', error);
+      toast.error(error.response?.data?.message || 'Failed to review submission. Please try again.');
+    }
+  };
   
   return (
     <DashboardLayout userRole={user?.role}>

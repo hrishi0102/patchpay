@@ -1,4 +1,4 @@
-// src/pages/dashboard/CompanyDashboard.jsx
+// src/pages/dashboard/CompanyDashboard.jsx (enhanced version)
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaPlus } from 'react-icons/fa';
@@ -43,24 +43,40 @@ const CompanyDashboard = () => {
         const activeBugs = bugs.filter(bug => 
           bug.status === 'open' || bug.status === 'in_progress').length;
         
-        // For pending submissions and balance, we'd need additional API endpoints
-        // For now, we'll just update the active bugs count
+        // Count pending submissions for each bug
+        let pendingSubmissionsCount = 0;
+        for (const bug of bugs) {
+          try {
+            const submissionsResponse = await api.get(`/submissions/bug/${bug._id}`);
+            const pendingSubmissions = submissionsResponse.data.filter(
+              submission => submission.status === 'pending'
+            );
+            pendingSubmissionsCount += pendingSubmissions.length;
+          } catch (error) {
+            console.error(`Error fetching submissions for bug ${bug._id}:`, error);
+          }
+        }
+        
+        // Update stats with bug and submission counts
         setStats(prev => ({
           ...prev,
-          activeBugs
+          activeBugs,
+          pendingSubmissions: pendingSubmissionsCount
         }));
         
-        // If you have an endpoint to get the wallet balance, you could use it here
+        // If the company has provided an API key, try to fetch their Payman balance
         if (user.paymanApiKey) {
           try {
-            // This would depend on your API implementation
-            // const balanceResponse = await api.get('/wallet/balance');
-            // setStats(prev => ({
-            //   ...prev,
-            //   balance: balanceResponse.data
-            // }));
+            // This endpoint would need to be implemented in your backend
+            const balanceResponse = await api.get('/auth/balance');
+            setStats(prev => ({
+              ...prev,
+              balance: balanceResponse.data.balance || 0
+            }));
           } catch (error) {
             console.error('Error fetching balance:', error);
+            // Default balance to 0 if we can't fetch it
+            setStats(prev => ({ ...prev, balance: 0 }));
           }
         }
         
