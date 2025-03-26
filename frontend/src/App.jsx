@@ -12,15 +12,15 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 
 // Protected Components & Pages
-import ProtectedRoute from './components/auth/ProtectedRoute';
 import CompanyDashboard from './pages/dashboard/CompanyDashboard';
 import ResearcherDashboard from './pages/dashboard/ResearcherDashboard';
 import ApiKeyManagement from './pages/dashboard/ApiKeyManagement';
 import BugListings from './pages/dashboard/BugListings';
 import CreateBug from './pages/dashboard/CreateBug';
 import BugDetail from './pages/dashboard/BugDetail';
-import CreateSubmission from './pages/dashboard/createSubmission';
+import CreateSubmission from './pages/dashboard/CreateSubmission';
 import ResearcherSubmissions from './pages/dashboard/ResearcherSubmissions';
+import Notifications from './pages/dashboard/Notifications';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -44,12 +44,14 @@ function App() {
           <Route path="/dashboard/company/api-key" element={<ApiKeyManagement />} />
           <Route path="/dashboard/company/bugs" element={<BugListings />} />
           <Route path="/dashboard/company/bugs/create" element={<CreateBug />} />
+          <Route path="/dashboard/company/notifications" element={<Notifications />} />
           
           {/* Protected researcher routes */}
           <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
           <Route path="/dashboard/researcher/bugs" element={<BugListings />} />
           <Route path="/dashboard/researcher/submissions" element={<ResearcherSubmissions />} />
           <Route path="/dashboard/researcher/submissions/create" element={<CreateSubmission />} />
+          <Route path="/dashboard/researcher/notifications" element={<Notifications />} />
           
           {/* Shared routes that work for both user types */}
           <Route path="/dashboard/bugs/:id" element={<BugDetail />} />

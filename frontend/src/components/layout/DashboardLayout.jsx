@@ -1,11 +1,34 @@
 // src/components/layout/DashboardLayout.jsx
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt, FaClipboardCheck } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { notificationService } from '../../services/notification.service';
 
 const DashboardLayout = ({ userRole, children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+  
+  useEffect(() => {
+    // Fetch notification count on initial load
+    const fetchNotifications = async () => {
+      try {
+        const notifications = await notificationService.getNotifications();
+        const unread = notifications.filter(notif => !notif.isRead).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+    
+    if (user) {
+      fetchNotifications();
+    }
+    
+    // You could implement a polling mechanism here to check for new notifications
+    // periodically, or implement websockets for real-time notifications
+  }, [user]);
   
   const handleLogout = () => {
     logout();
@@ -63,6 +86,20 @@ const DashboardLayout = ({ userRole, children }) => {
               </li>
             )}
             <li>
+              <Link 
+                to={`/dashboard/${userRole}/notifications`}
+                className="flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors"
+              >
+                <FaBell className="mr-3" />
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li>
               <button 
                 onClick={handleLogout}
                 className="w-full flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors text-left"
@@ -83,7 +120,18 @@ const DashboardLayout = ({ userRole, children }) => {
               {isCompany ? 'Company Dashboard' : 'Researcher Dashboard'}
             </h1>
             <div className="flex items-center">
-              <span className="text-gray-300 mr-4">{user?.name}</span>
+              <Link 
+                to={`/dashboard/${userRole}/notifications`}
+                className="relative p-2 rounded-full hover:bg-gray-700 mr-4"
+              >
+                <FaBell className="text-gray-300" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-primary text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+              <span className="text-gray-300">{user?.name}</span>
             </div>
           </div>
         </header>
