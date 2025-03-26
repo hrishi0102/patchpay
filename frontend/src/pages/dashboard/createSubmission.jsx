@@ -1,9 +1,10 @@
-// src/pages/dashboard/CreateSubmission.jsx
+// src/pages/dashboard/CreateSubmission.jsx (updated)
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaSave, FaTimes } from 'react-icons/fa';
+import { FaSave, FaTimes, FaGithub, FaCode } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import GithubSummaryModal from '../../components/github/GithubSummaryModal';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +19,7 @@ const CreateSubmission = () => {
     fixDescription: '',
     proofOfFix: ''
   });
+  const [isGithubModalOpen, setIsGithubModalOpen] = useState(false);
   
   // Extract bugId from URL query params
   useEffect(() => {
@@ -77,6 +79,26 @@ const CreateSubmission = () => {
     navigate(`/dashboard/bugs/${formData.bugId}`);
   };
   
+  const handleSummarySelect = (summary) => {
+    // Append the summary to the existing description
+    const updatedDescription = formData.fixDescription 
+      ? `${formData.fixDescription}\n\n--- GitHub Code Summary ---\n${summary}`
+      : `--- GitHub Code Summary ---\n${summary}`;
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      fixDescription: updatedDescription 
+    }));
+  };
+  
+  const openGithubModal = () => {
+    setIsGithubModalOpen(true);
+  };
+  
+  const closeGithubModal = () => {
+    setIsGithubModalOpen(false);
+  };
+  
   if (!bugDetails) {
     return (
       <DashboardLayout userRole="researcher">
@@ -113,38 +135,56 @@ const CreateSubmission = () => {
         <h2 className="text-xl font-bold text-white mb-4">Your Solution</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
+            <label htmlFor="proofOfFix" className="block text-sm font-medium text-gray-300 mb-1">
+              Proof of Fix *
+            </label>
+            <div className="flex">
+              <input
+                id="proofOfFix"
+                name="proofOfFix"
+                type="text"
+                required
+                className="input flex-1 rounded-r-none"
+                value={formData.proofOfFix}
+                onChange={handleChange}
+                placeholder="GitHub PR link, CodeSandbox, or any verifiable proof of your solution"
+              />
+              <button
+                type="button"
+                onClick={openGithubModal}
+                className="btn btn-primary rounded-l-none flex items-center"
+              >
+                <FaGithub className="mr-2" /> Summarize Code
+              </button>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">
+              Provide a link to a GitHub PR, Gist, CodeSandbox, or any other evidence that demonstrates your fix works.
+            </p>
+          </div>
+          
+          <div>
             <label htmlFor="fixDescription" className="block text-sm font-medium text-gray-300 mb-1">
               Fix Description *
             </label>
             <textarea
               id="fixDescription"
               name="fixDescription"
-              rows="6"
+              rows="10"
               required
               className="input"
               value={formData.fixDescription}
               onChange={handleChange}
-              placeholder="Describe your approach to fixing this bug in detail. Include your methodology and why your solution works."
+              placeholder="Describe your approach to fixing this bug in detail. Include your methodology and why your solution works. Use the 'Summarize Code' button to automatically analyze and summarize your GitHub code."
             ></textarea>
-          </div>
-          
-          <div>
-            <label htmlFor="proofOfFix" className="block text-sm font-medium text-gray-300 mb-1">
-              Proof of Fix *
-            </label>
-            <input
-              id="proofOfFix"
-              name="proofOfFix"
-              type="text"
-              required
-              className="input"
-              value={formData.proofOfFix}
-              onChange={handleChange}
-              placeholder="GitHub PR link, CodeSandbox, or any verifiable proof of your solution"
-            />
-            <p className="text-sm text-gray-400 mt-1">
-              Provide a link to a GitHub PR, Gist, CodeSandbox, or any other evidence that demonstrates your fix works.
-            </p>
+            <div className="flex justify-end mt-2">
+              <button
+                type="button"
+                onClick={openGithubModal}
+                className="text-primary hover:underline flex items-center text-sm"
+              >
+                <FaCode className="mr-1" /> Generate GitHub Code Summary
+              </button>
+            </div>
           </div>
           
           <div className="flex justify-end space-x-4 pt-4 border-t border-gray-700">
@@ -165,6 +205,13 @@ const CreateSubmission = () => {
           </div>
         </form>
       </div>
+      
+      {/* GitHub Summary Modal */}
+      <GithubSummaryModal 
+        isOpen={isGithubModalOpen} 
+        onClose={closeGithubModal} 
+        onSummarySelect={handleSummarySelect} 
+      />
     </DashboardLayout>
   );
 };

@@ -75,7 +75,7 @@ const generateCodeSummary = async (code, language, repoInfo) => {
     3. How it addresses a bug or vulnerability
     4. Any dependencies or important context
     
-    Keep the summary clear and under 400 words, focusing on how this code fixes a potential bug.
+    Keep the summary clear and under 400 words, focusing on how this code fixes a potential bug. Don't start with "Here is the summary of the code" or anything like that. Just give the summary.
     `;
     
     // Using the new API structure to generate content
