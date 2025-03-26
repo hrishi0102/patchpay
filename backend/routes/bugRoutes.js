@@ -14,13 +14,13 @@ const { protect, isCompany } = require('../middleware/auth');
 
 // Public routes
 router.get('/all', getAllBugs);
+router.get('/filters', getBugsWithFilters); // Moving this BEFORE the '/:id' route
 router.get('/', getBugs);
+router.get('/company/list', protect, isCompany, getCompanyBugs);
 router.get('/:id', getBugById);
-router.get('/filters', getBugsWithFilters);
 
 // Company routes
 router.post('/', protect, isCompany, createBug);
 router.put('/:id/status', protect, isCompany, updateBugStatus);
-router.get('/company/list', protect, isCompany, getCompanyBugs);
 
 module.exports = router;

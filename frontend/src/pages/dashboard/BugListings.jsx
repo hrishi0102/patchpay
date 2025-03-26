@@ -26,20 +26,20 @@ const BugListings = () => {
         if (isCompany) {
           response = await api.get('/bugs/company/list');
         } else {
-          // For researchers, get open bugs by default or use the filter
-          let endpoint = '/bugs/all';
+          // For researchers, use the filters API
+          const params = new URLSearchParams();
           
-          // If status or severity filter is applied, use the filter endpoint
-          if (filter.status !== 'open' || filter.severity) {
-            const params = {};
-            if (filter.status) params.status = filter.status;
-            if (filter.severity) params.severity = filter.severity;
-            
-            response = await api.get('/bugs/all', { params });
-          } else {
-            // Default: fetch open bugs
-            response = await api.get('/bugs/all');
+          // Only add status if it's not empty
+          if (filter.status) {
+            params.append('status', filter.status);
           }
+          
+          if (filter.severity) {
+            params.append('severity', filter.severity);
+          }
+          
+          // Always use the filters endpoint
+          response = await api.get(`/bugs/filters${params.toString() ? `?${params.toString()}` : ''}`);
         }
         
         setBugs(response.data);
@@ -90,10 +90,10 @@ const BugListings = () => {
                 onChange={handleFilterChange}
                 className="input bg-gray-700"
               >
+                <option value="">All</option>
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
                 <option value="closed">Closed</option>
-                <option value="">All</option>
               </select>
             </div>
             <div>

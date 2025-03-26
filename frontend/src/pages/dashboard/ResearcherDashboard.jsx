@@ -43,10 +43,8 @@ const ResearcherDashboardHome = () => {
           totalEarnings
         });
         
-        // Fetch recent open bugs
-        const bugsResponse = await api.get('/bugs', {
-          params: { status: 'open' }
-        });
+        // Fetch recent open bugs - using the default endpoint for open bugs
+        const bugsResponse = await api.get('/bugs');
         
         // Display only the most recent 3 bugs
         setRecentBugs(bugsResponse.data.slice(0, 3));

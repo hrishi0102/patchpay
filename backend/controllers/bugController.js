@@ -83,7 +83,7 @@ const getBugs = async (req, res) => {
 };
 
 // @desc    Get bugs with optional filters
-// @route   GET /api/bugs
+// @route   GET /api/bugs/filters
 // @access  Public
 const getBugsWithFilters = async (req, res) => {
   try {
@@ -92,11 +92,9 @@ const getBugsWithFilters = async (req, res) => {
     // Build filter object
     const filter = {};
     
-    // Filter by status if provided, otherwise default to open bugs
+    // Filter by status if provided (but don't default to 'open')
     if (status) {
       filter.status = status;
-    } else {
-      filter.status = 'open';
     }
     
     // Add severity filter if provided
