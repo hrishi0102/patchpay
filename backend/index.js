@@ -11,6 +11,7 @@ const bugRoutes = require('./routes/bugRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const githubRoutes = require('./routes/githubRoutes');
 
 // Initialize Express app
 const app = express();
@@ -29,7 +30,7 @@ app.use('/api/bugs', bugRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
-
+app.use('/api/github', githubRoutes);
 // Basic route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Bug Bounty Platform API' });
