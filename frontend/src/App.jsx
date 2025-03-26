@@ -22,6 +22,7 @@ import CreateSubmission from './pages/dashboard/CreateSubmission';
 import ResearcherSubmissions from './pages/dashboard/ResearcherSubmissions';
 import Notifications from './pages/dashboard/Notifications';
 import UserProfile from './pages/dashboard/UserProfile';
+import Leaderboard from './pages/dashboard/Leaderboard';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -39,6 +40,8 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
           </Route>
+
+          <Route path="/dashboard/leaderboard" element={<Leaderboard />} />
           
           {/* Protected company routes */}
           <Route path="/dashboard/company" element={<CompanyDashboard />} />
@@ -47,6 +50,7 @@ function App() {
           <Route path="/dashboard/company/bugs/create" element={<CreateBug />} />
           <Route path="/dashboard/company/notifications" element={<Notifications />} />
           <Route path="/dashboard/company/profile" element={<UserProfile />} />
+          <Route path="/dashboard/company/leaderboard" element={<Leaderboard />} />
           
           {/* Protected researcher routes */}
           <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
@@ -55,6 +59,7 @@ function App() {
           <Route path="/dashboard/researcher/submissions/create" element={<CreateSubmission />} />
           <Route path="/dashboard/researcher/notifications" element={<Notifications />} />
           <Route path="/dashboard/researcher/profile" element={<UserProfile />} />
+          <Route path="/dashboard/researcher/leaderboard" element={<Leaderboard />} />
           
           {/* Shared routes that work for both user types */}
           <Route path="/dashboard/bugs/:id" element={<BugDetail />} />

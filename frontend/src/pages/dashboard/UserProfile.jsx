@@ -1,23 +1,35 @@
 // src/pages/dashboard/UserProfile.jsx
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaShieldAlt, FaWallet, FaKey } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaShieldAlt, FaWallet, FaKey, FaTrophy, FaChartLine } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { profileService } from '../../services/profile.service';
+import { leaderboardService } from '../../services/leaderboard.service';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reputationStats, setReputationStats] = useState(null);
   const { user } = useAuth();
   
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndStats = async () => {
       try {
         setLoading(true);
         const data = await profileService.getUserProfile();
         setProfile(data);
+        
+        // If user is a researcher, fetch reputation stats
+        if (data.role === 'researcher') {
+          try {
+            const rankData = await leaderboardService.getMyRank();
+            setReputationStats(rankData);
+          } catch (error) {
+            console.error('Error fetching reputation stats:', error);
+          }
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load profile data');
@@ -26,7 +38,7 @@ const UserProfile = () => {
       }
     };
     
-    fetchProfile();
+    fetchProfileAndStats();
   }, []);
   
   if (loading) {
@@ -156,6 +168,54 @@ const UserProfile = () => {
                           : 'Your wallet ID will be automatically set up when you receive your first payment.'}
                       </p>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {!isCompany && reputationStats && (
+              <div>
+                <h3 className="text-md font-medium text-white mb-2">Reputation & Stats</h3>
+                <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
+                  <div className="flex flex-col space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-400">Total Earnings</p>
+                        <p className="text-lg font-medium text-primary">
+                          ${reputationStats.researcher.totalEarnings.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {reputationStats.ranks.byEarnings ? `Rank #${reputationStats.ranks.byEarnings}` : ''}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm text-gray-400">Success Rate</p>
+                        <p className="text-lg font-medium text-primary">
+                          {reputationStats.researcher.successRate.toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {reputationStats.ranks.bySuccessRate 
+                            ? `Rank #${reputationStats.ranks.bySuccessRate}` 
+                            : 'Need 3+ submissions for ranking'}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm text-gray-400">Submissions</p>
+                        <p className="text-lg font-medium text-primary">
+                          {reputationStats.researcher.successfulSubmissions} / {reputationStats.researcher.totalSubmissions}
+                        </p>
+                        <p className="text-xs text-gray-400">Successful / Total</p>
+                      </div>
+                    </div>
+                    
+                    <Link 
+                      to="/dashboard/researcher/leaderboard" 
+                      className="text-primary hover:underline inline-flex items-center"
+                    >
+                      <FaTrophy className="mr-1" /> View Leaderboard
+                    </Link>
                   </div>
                 </div>
               </div>

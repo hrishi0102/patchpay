@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../services/api';
 import BugCard from '../../components/bugs/BugCard';
+import LeaderboardWidget from '../../components/leaderboard/LeaderboardWidget';
 
 const ResearcherDashboardHome = () => {
   const [stats, setStats] = useState({
@@ -148,6 +149,9 @@ const ResearcherDashboardHome = () => {
             </div>
           </div>
         )}
+      </div>
+      <div className="card">
+        <LeaderboardWidget />
       </div>
     </div>
   );

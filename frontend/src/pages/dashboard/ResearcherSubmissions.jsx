@@ -2,22 +2,44 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaBug, FaExclamationTriangle } from 'react-icons/fa';
+import { FaBug, FaExclamationTriangle, FaTrophy, FaCheckCircle, FaChartLine } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { leaderboardService } from '../../services/leaderboard.service';
 
 const ResearcherSubmissions = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [userStats, setUserStats] = useState({
+    totalEarnings: 0,
+    successRate: 0,
+    successfulSubmissions: 0,
+    totalSubmissions: 0
+  });
   
   useEffect(() => {
-    const fetchSubmissions = async () => {
+    const fetchSubmissionsAndStats = async () => {
       try {
         setLoading(true);
+        
+        // Fetch submissions
         const response = await api.get('/submissions/researcher');
         setSubmissions(response.data);
+        
+        // Fetch researcher stats
+        try {
+          const rankData = await leaderboardService.getMyRank();
+          setUserStats({
+            totalEarnings: rankData.researcher.totalEarnings,
+            successRate: rankData.researcher.successRate,
+            successfulSubmissions: rankData.researcher.successfulSubmissions,
+            totalSubmissions: rankData.researcher.totalSubmissions
+          });
+        } catch (error) {
+          console.error('Error fetching researcher stats:', error);
+        }
       } catch (error) {
         console.error('Error fetching submissions:', error);
         toast.error('Failed to fetch submissions');
@@ -26,7 +48,7 @@ const ResearcherSubmissions = () => {
       }
     };
     
-    fetchSubmissions();
+    fetchSubmissionsAndStats();
   }, []);
   
   // Function to format date
@@ -56,7 +78,47 @@ const ResearcherSubmissions = () => {
     <DashboardLayout userRole="researcher">
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-white">My Submissions</h1>
+        
+        <Link 
+          to="/dashboard/researcher/leaderboard" 
+          className="btn btn-outline flex items-center"
+        >
+          <FaTrophy className="mr-2" /> Leaderboard
+        </Link>
       </div>
+      
+      {/* Researcher Stats Section */}
+      {!loading && (
+        <div className="card mb-6 bg-gradient-to-r from-gray-800 to-gray-700">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+            <FaChartLine className="mr-2" /> Your Stats
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+              <p className="text-sm text-gray-400">Total Earnings</p>
+              <p className="text-2xl font-bold text-primary">${userStats.totalEarnings.toFixed(2)}</p>
+            </div>
+            
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+              <p className="text-sm text-gray-400">Success Rate</p>
+              <p className="text-2xl font-bold text-primary">
+                {userStats.successRate ? userStats.successRate.toFixed(1) + '%' : 'N/A'}
+              </p>
+            </div>
+            
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+              <p className="text-sm text-gray-400">Successful Fixes</p>
+              <p className="text-2xl font-bold text-primary">{userStats.successfulSubmissions}</p>
+            </div>
+            
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+              <p className="text-sm text-gray-400">Total Submissions</p>
+              <p className="text-2xl font-bold text-primary">{userStats.totalSubmissions}</p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {loading ? (
         <div className="text-center py-12">

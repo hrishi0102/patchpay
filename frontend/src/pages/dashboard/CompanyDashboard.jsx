@@ -5,6 +5,7 @@ import { FaPlus } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import LeaderboardWidget from '../../components/leaderboard/LeaderboardWidget';
 import api from '../../services/api';
 
 const CompanyDashboard = () => {
@@ -180,6 +181,27 @@ const CompanyDashboard = () => {
                   </Link>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Top Researchers</h2>
+            </div>
+            <LeaderboardWidget />
+          </div>
+          
+          {!user.paymanApiKey && (
+            <div className="bg-gray-800 p-6 rounded-lg border border-yellow-600">
+              <h3 className="text-lg font-medium text-white mb-2">Action Required: API Key Missing</h3>
+              <p className="text-gray-300 mb-4">
+                You need to set up your PaymanAI API key before you can post bug bounties.
+              </p>
+              <Link to="/dashboard/company/api-key" className="btn btn-primary">
+                Set Up API Key
+              </Link>
             </div>
           )}
         </div>

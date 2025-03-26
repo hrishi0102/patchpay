@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt, FaClipboardCheck, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { notificationService } from '../../services/notification.service';
+import { FaTrophy } from 'react-icons/fa';
 
 const DashboardLayout = ({ userRole, children }) => {
   const { user, logout } = useAuth();
@@ -95,6 +96,15 @@ const DashboardLayout = ({ userRole, children }) => {
                     {unreadCount}
                   </span>
                 )}
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to={`/dashboard/${userRole}/leaderboard`}
+                className="flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors"
+              >
+                <FaTrophy className="mr-3" />
+                Leaderboard
               </Link>
             </li>
             <li>
