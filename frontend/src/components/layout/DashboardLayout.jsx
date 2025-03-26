@@ -1,7 +1,7 @@
 // src/components/layout/DashboardLayout.jsx
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt, FaClipboardCheck } from 'react-icons/fa';
+import { FaBug, FaUser, FaBell, FaCog, FaSignOutAlt, FaClipboardCheck, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { notificationService } from '../../services/notification.service';
 
@@ -9,6 +9,7 @@ const DashboardLayout = ({ userRole, children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   
   useEffect(() => {
     // Fetch notification count on initial load
@@ -25,9 +26,6 @@ const DashboardLayout = ({ userRole, children }) => {
     if (user) {
       fetchNotifications();
     }
-    
-    // You could implement a polling mechanism here to check for new notifications
-    // periodically, or implement websockets for real-time notifications
   }, [user]);
   
   const handleLogout = () => {
@@ -40,7 +38,7 @@ const DashboardLayout = ({ userRole, children }) => {
   return (
     <div className="min-h-screen bg-gray-900 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-800 text-white fixed h-full">
+      <div className="w-64 bg-gray-800 text-white fixed h-full overflow-y-auto">
         <div className="p-5 border-b border-gray-700">
           <h2 className="text-xl font-bold">Bug Bounty</h2>
         </div>
@@ -100,6 +98,15 @@ const DashboardLayout = ({ userRole, children }) => {
               </Link>
             </li>
             <li>
+              <Link 
+                to={`/dashboard/${userRole}/profile`}
+                className="flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors"
+              >
+                <FaUserCircle className="mr-3" />
+                My Profile
+              </Link>
+            </li>
+            <li>
               <button 
                 onClick={handleLogout}
                 className="w-full flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors text-left"
@@ -131,7 +138,41 @@ const DashboardLayout = ({ userRole, children }) => {
                   </span>
                 )}
               </Link>
-              <span className="text-gray-300">{user?.name}</span>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <FaUser className="text-white text-sm" />
+                  </div>
+                  <span className="text-gray-300 hidden md:inline-block">{user?.name}</span>
+                </button>
+                
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 py-2 bg-gray-800 rounded-md shadow-lg z-10 border border-gray-700">
+                    <Link 
+                      to={`/dashboard/${userRole}/profile`}
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <FaUserCircle className="inline mr-2" />
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        handleLogout();
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    >
+                      <FaSignOutAlt className="inline mr-2" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>

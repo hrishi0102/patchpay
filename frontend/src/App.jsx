@@ -21,6 +21,7 @@ import BugDetail from './pages/dashboard/BugDetail';
 import CreateSubmission from './pages/dashboard/CreateSubmission';
 import ResearcherSubmissions from './pages/dashboard/ResearcherSubmissions';
 import Notifications from './pages/dashboard/Notifications';
+import UserProfile from './pages/dashboard/UserProfile';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -45,6 +46,7 @@ function App() {
           <Route path="/dashboard/company/bugs" element={<BugListings />} />
           <Route path="/dashboard/company/bugs/create" element={<CreateBug />} />
           <Route path="/dashboard/company/notifications" element={<Notifications />} />
+          <Route path="/dashboard/company/profile" element={<UserProfile />} />
           
           {/* Protected researcher routes */}
           <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
@@ -52,6 +54,7 @@ function App() {
           <Route path="/dashboard/researcher/submissions" element={<ResearcherSubmissions />} />
           <Route path="/dashboard/researcher/submissions/create" element={<CreateSubmission />} />
           <Route path="/dashboard/researcher/notifications" element={<Notifications />} />
+          <Route path="/dashboard/researcher/profile" element={<UserProfile />} />
           
           {/* Shared routes that work for both user types */}
           <Route path="/dashboard/bugs/:id" element={<BugDetail />} />
