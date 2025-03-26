@@ -10,6 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 const bugRoutes = require('./routes/bugRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
 
 // Initialize Express app
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bugs', bugRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

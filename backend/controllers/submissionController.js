@@ -131,10 +131,19 @@ const reviewSubmission = async (req, res) => {
     submission.reviewedBy = req.user._id;
     submission.reviewedAt = Date.now();
     
-    // If approved, process payment
+    // Get the researcher
+    const researcher = await User.findById(submission.researcherId);
+    
+    // Update researcher's reputation metrics
+    researcher.totalSubmissions += 1;
+    
+    // If approved, process payment and update successful submissions
     if (status === 'approved') {
       const bug = submission.bugId;
-      const researcher = await User.findById(submission.researcherId);
+      
+      // Update researcher's reputation for approved submission
+      researcher.successfulSubmissions += 1;
+      researcher.totalEarnings += bug.reward;
       
       // Get company
       const company = await User.findById(req.user._id);
@@ -153,7 +162,6 @@ const reviewSubmission = async (req, res) => {
           
           // Save wallet ID to researcher
           researcher.walletId = payee.id;
-          await researcher.save();
         }
         
         // Send payment
@@ -218,6 +226,10 @@ const reviewSubmission = async (req, res) => {
       submission.bugId.status = 'open';
       await submission.bugId.save();
     }
+    
+    // Update reputation metrics
+    await researcher.updateReputation();
+    await researcher.save();
     
     await submission.save();
     
