@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import patchPayLogo from '../../assets/patchpay.png';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -13,7 +14,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
+              <img
+                src={patchPayLogo}
+                alt="PatchPay Logo"
+                className="h-10 w-auto object-contain"
+              />
               <span className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
                 PatchPay
               </span>
