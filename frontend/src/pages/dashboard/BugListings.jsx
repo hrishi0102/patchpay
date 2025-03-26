@@ -69,7 +69,7 @@ const BugListings = () => {
         
         {isCompany && (
           <Link to="/dashboard/company/bugs/create" className="btn btn-primary">
-            <FaPlus className="mr-2" /> Post New Bug
+            <div className="mr-2" /> Post New Bug
           </Link>
         )}
       </div>
