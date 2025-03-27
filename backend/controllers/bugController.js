@@ -8,7 +8,7 @@ const { createPaymanClient, getBalance } = require('../utils/paymanService');
 // @access  Private/Company
 const createBug = async (req, res) => {
   try {
-    const { title, description, severity, reward } = req.body;
+    const { title, description, severity, reward, testCases, autoApprovalThreshold } = req.body;
     
     // Check if company has PaymanAI API key
     const company = await User.findById(req.user._id);
@@ -40,7 +40,9 @@ const createBug = async (req, res) => {
       description,
       severity,
       reward,
-      companyId: req.user._id
+      companyId: req.user._id,
+      testCases: testCases || [],
+      autoApprovalThreshold: autoApprovalThreshold || 90
     });
     
     res.status(201).json(bug);

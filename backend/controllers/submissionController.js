@@ -5,6 +5,8 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Notification = require('../models/Notification');
 const { createPaymanClient, createPayee, sendPayment } = require('../utils/paymanService');
+const { processGitHubUrl } = require('../utils/githubService');
+const { evaluateCodeAgainstTestCases } = require('../utils/codeEvaluationService');
 
 // @desc    Create a new submission
 // @route   POST /api/submissions
@@ -24,31 +26,180 @@ const createSubmission = async (req, res) => {
       return res.status(400).json({ message: 'This bug is not open for submissions' });
     }
     
+    let evaluationScore = 0;
+    let evaluationDetails = null;
+    let autoApproved = false;
+
+    // Only evaluate if the bug has test cases
+    if (bug.testCases && bug.testCases.length > 0) {
+      try {
+        // Extract GitHub URL from proofOfFix if it contains a GitHub URL
+        const githubUrlMatch = proofOfFix.match(/(https:\/\/github\.com\/[^\/]+\/[^\/]+\/blob\/[^\/]+\/[^?\s]+)/);
+        
+        if (githubUrlMatch) {
+          const githubUrl = githubUrlMatch[1];
+          
+          // Process GitHub URL to get code
+          const githubResult = await processGitHubUrl(githubUrl);
+          const code = githubResult.code || githubResult; // Handle different return formats
+          const language = githubResult.language;
+          console.log(`Code: ${code}`);
+          console.log(`Language: ${language}`);
+          
+          // Evaluate code against test cases
+          const evaluation = await evaluateCodeAgainstTestCases(code, bug.testCases, language);
+          console.log(`Evaluation: ${evaluation}`);
+          
+          evaluationScore = evaluation.overallScore;
+          evaluationDetails = JSON.stringify(evaluation);
+          console.log(`Evaluation Score: ${evaluationScore}`);
+          console.log(`Evaluation Details: ${evaluationDetails}`);
+          
+          // Auto-approve if score exceeds threshold
+          if (evaluationScore >= bug.autoApprovalThreshold) {
+            autoApproved = true;
+          }
+        }
+      } catch (error) {
+        console.error('Code evaluation error:', error);
+        // Continue with submission without evaluation if there's an error
+      }
+    }
+
     // Create submission
     const submission = await Submission.create({
       bugId,
       researcherId: req.user._id,
       fixDescription,
-      proofOfFix
+      proofOfFix,
+      evaluationScore,
+      evaluationDetails,
+      // If auto-approved, set status to approved
+      status: autoApproved ? 'approved' : 'pending',
+      autoApproved
     });
     
-    // Update bug status to in_progress
-    bug.status = 'in_progress';
-    await bug.save();
-    
-    // Create notification for company
-    await Notification.create({
-      userId: bug.companyId,
-      type: 'submission_received',
-      message: `New submission received for bug: ${bug.title}`,
-      relatedId: submission._id,
-      onModel: 'Submission'
-    });
+    // If not auto-approved, update bug status to in_progress
+    if (!autoApproved) {
+      bug.status = 'in_progress';
+      await bug.save();
+      
+      // Create notification for company
+      await Notification.create({
+        userId: bug.companyId,
+        type: 'submission_received',
+        message: `New submission received for bug: ${bug.title}`,
+        relatedId: submission._id,
+        onModel: 'Submission'
+      });
+    } else {
+      // If auto-approved, process payment and update status
+      await processPaymentForApprovedSubmission(submission, bug, req.user._id);
+    }
     
     res.status(201).json(submission);
   } catch (error) {
     console.error('Create submission error:', error);
     res.status(500).json({ message: 'Failed to create submission', error: error.message });
+  }
+};
+
+// Helper function for processing payment for auto-approved submissions
+const processPaymentForApprovedSubmission = async (submission, bug, reviewerId) => {
+  try {
+    // Get the researcher
+    const researcher = await User.findById(submission.researcherId);
+    
+    // Get company
+    const company = await User.findById(bug.companyId);
+    
+    // Create PaymanAI client
+    const paymanClient = await createPaymanClient(company.paymanApiKey);
+    
+    // Create payee if researcher doesn't have a wallet ID
+    if (!researcher.walletId) {
+      const payee = await createPayee(paymanClient, {
+        name: researcher.name,
+        email: researcher.email
+      });
+      
+      // Save wallet ID to researcher
+      researcher.walletId = payee.id;
+      await researcher.save();
+    }
+    
+    // Send payment
+    const payment = await sendPayment(paymanClient, {
+      amount: bug.reward,
+      payeeId: researcher.walletId,
+      memo: `Auto-approved payment for bug fix: ${bug.title} (Score: ${submission.evaluationScore}%)`,
+      metadata: {
+        bugId: bug._id.toString(),
+        submissionId: submission._id.toString(),
+        autoApproved: true
+      }
+    });
+    
+    // Record transaction
+    const transaction = await Transaction.create({
+      researcherId: researcher._id,
+      bugId: bug._id,
+      amount: bug.reward,
+      currency: "TSD", // Test dollars
+      paymanTransactionId: payment.reference,
+      status: "processing"
+    });
+    
+    // Create notifications
+    await Notification.create({
+      userId: researcher._id,
+      type: 'submission_approved',
+      message: `Your submission for "${bug.title}" has been auto-approved with a score of ${submission.evaluationScore}%!`,
+      relatedId: submission._id,
+      onModel: 'Submission'
+    });
+    
+    await Notification.create({
+      userId: researcher._id,
+      type: 'payment_received',
+      message: `You've received ${bug.reward} TSD for your bug fix!`,
+      relatedId: transaction._id,
+      onModel: 'Transaction'
+    });
+    
+    // Notify company about auto-approval
+    await Notification.create({
+      userId: bug.companyId,
+      type: 'submission_approved',
+      message: `A submission for "${bug.title}" was auto-approved with a score of ${submission.evaluationScore}%.`,
+      relatedId: submission._id,
+      onModel: 'Submission'
+    });
+    
+    // Close the bug
+    bug.status = 'closed';
+    await bug.save();
+    
+    // Update researcher's reputation metrics
+    researcher.totalSubmissions += 1;
+    researcher.successfulSubmissions += 1;
+    researcher.totalEarnings += bug.reward;
+    await researcher.updateReputation();
+  } catch (error) {
+    console.error('Auto-approval payment processing error:', error);
+    // If payment fails, revert to pending status
+    submission.status = 'pending';
+    submission.autoApproved = false;
+    await submission.save();
+    
+    // Create notification about failed auto-approval
+    await Notification.create({
+      userId: bug.companyId,
+      type: 'payment_failed',
+      message: `Auto-approval payment failed for submission to "${bug.title}". Manual review required.`,
+      relatedId: submission._id,
+      onModel: 'Submission'
+    });
   }
 };
 
@@ -89,7 +240,7 @@ const getSubmissionsByBug = async (req, res) => {
 const getResearcherSubmissions = async (req, res) => {
   try {
     const submissions = await Submission.find({ researcherId: req.user._id })
-      .populate('bugId', 'title status severity reward')
+      .populate('bugId', 'title status severity reward autoApprovalThreshold testCases')
       .sort({ createdAt: -1 });
     
     res.json(submissions);
@@ -118,6 +269,11 @@ const reviewSubmission = async (req, res) => {
     
     if (!submission) {
       return res.status(404).json({ message: 'Submission not found' });
+    }
+    
+    // Check if submission is already auto-approved
+    if (submission.autoApproved && submission.status === 'approved') {
+      return res.status(400).json({ message: 'This submission has already been auto-approved and cannot be modified' });
     }
     
     // Check if user is the company that owns the bug

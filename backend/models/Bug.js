@@ -23,6 +23,20 @@ const BugSchema = new mongoose.Schema({
     ref: "User", 
     required: true 
   }, // Company who posted
+  testCases: { 
+    type: [{ 
+      input: String, 
+      expectedOutput: String,
+      description: String
+    }], 
+    default: [] 
+  },
+  autoApprovalThreshold: {
+    type: Number,
+    default: 90,
+    min: 0,
+    max: 100
+  },
   status: { 
     type: String, 
     enum: ["open", "in_progress", "closed"], 

@@ -31,6 +31,18 @@ const SubmissionSchema = new mongoose.Schema({
   reviewedAt: { 
     type: Date 
   },
+  evaluationScore: {
+    type: Number,
+    default: 0 
+  },
+  evaluationDetails: {
+    type: String,
+    default: null
+  },
+  autoApproved: {
+    type: Boolean,
+    default: false
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 

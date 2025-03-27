@@ -136,7 +136,8 @@ const processGitHubUrl = async (url) => {
     return {
       repoInfo,
       language,
-      summary
+      summary,
+      code
     };
   } catch (error) {
     console.error('Error processing GitHub URL:', error);

@@ -16,6 +16,7 @@ const BugDetail = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [userHasSubmitted, setUserHasSubmitted] = useState(false);
+  const [showEvaluationDetails, setShowEvaluationDetails] = useState({});
   
   const isCompany = user?.role === 'company';
   const isOwner = isCompany && bug?.companyId?._id === user?._id;
@@ -89,6 +90,60 @@ const BugDetail = () => {
         return 'bg-red-600';
       default:
         return 'bg-gray-600';
+    }
+  };
+
+  // Toggle evaluation details visibility
+  const toggleEvaluationDetails = (submissionId) => {
+    setShowEvaluationDetails(prev => ({
+      ...prev,
+      [submissionId]: !prev[submissionId]
+    }));
+  };
+
+  // Function to render evaluation details
+  const renderEvaluationDetails = (detailsString) => {
+    try {
+      const details = JSON.parse(detailsString);
+      
+      return (
+        <div>
+          {details.summary && (
+            <div className="mb-3 pb-2 border-b border-gray-600">
+              <div className="font-medium">Summary:</div>
+              <div>{details.summary}</div>
+            </div>
+          )}
+          
+          {details.testResults && details.testResults.length > 0 && (
+            <div>
+              <div className="font-medium mb-2">Test Results:</div>
+              <div className="space-y-3">
+                {details.testResults.map((result, index) => (
+                  <div key={index} className="p-2 rounded border border-gray-600">
+                    <div className="flex justify-between items-center mb-1">
+                      <div>Test Case #{result.testCaseIndex + 1}</div>
+                      {result.passed ? (
+                        <span className="text-green-500 flex items-center">
+                          <FaCheckCircle className="mr-1" /> Passed
+                        </span>
+                      ) : (
+                        <span className="text-red-500 flex items-center">
+                          <FaTimesCircle className="mr-1" /> Failed
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm">{result.explanation}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    } catch (e) {
+      console.error('Error parsing evaluation details', e);
+      return <div>Error displaying evaluation details</div>;
     }
   };
   
@@ -216,6 +271,49 @@ const BugDetail = () => {
           </div>
         </div>
         
+        {/* Test Cases Section */}
+        {bug.testCases && bug.testCases.length > 0 && (
+          <div className="mt-6 mb-6">
+            <h2 className="text-lg font-medium text-white mb-2">Test Cases</h2>
+            <div className="space-y-3">
+              {bug.testCases.map((testCase, index) => (
+                <div key={index} className="bg-gray-800 p-4 rounded border border-gray-700">
+                  <div className="flex justify-between">
+                    <h3 className="font-medium text-white">Test Case #{index + 1}</h3>
+                    {testCase.description && (
+                      <span className="text-gray-300">{testCase.description}</span>
+                    )}
+                  </div>
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-400">Input:</div>
+                      <div className="bg-gray-700 p-2 rounded mt-1 text-gray-200 whitespace-pre-line">
+                        {testCase.input}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-400">Expected Output:</div>
+                      <div className="bg-gray-700 p-2 rounded mt-1 text-gray-200 whitespace-pre-line">
+                        {testCase.expectedOutput}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-gray-800/50 p-3 rounded-md mt-2 border border-gray-700">
+              <div className="flex items-center">
+                <span className="text-gray-300 text-sm">
+                  Auto-approval threshold: {bug.autoApprovalThreshold || 90}%
+                </span>
+                <span className="ml-2 text-xs bg-primary px-2 py-1 rounded-full text-white">
+                  Submissions scoring above this will be auto-approved
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div>
           <h2 className="text-lg font-medium text-white mb-2">Company</h2>
           <div className="bg-gray-800 p-4 rounded border border-gray-700">
@@ -295,13 +393,20 @@ const BugDetail = () => {
                         {formatDate(submission.createdAt)}
                       </div>
                     </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      submission.status === 'approved' ? 'bg-green-600 text-white' : 
-                      submission.status === 'rejected' ? 'bg-red-600 text-white' : 
-                      'bg-yellow-600 text-white'
-                    }`}>
-                      {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
-                    </span>
+                    <div className="flex items-center">
+                      {submission.autoApproved && (
+                        <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full mr-2">
+                          Auto-Approved
+                        </span>
+                      )}
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        submission.status === 'approved' ? 'bg-green-600 text-white' : 
+                        submission.status === 'rejected' ? 'bg-red-600 text-white' : 
+                        'bg-yellow-600 text-white'
+                      }`}>
+                        {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="mt-3">
@@ -321,7 +426,53 @@ const BugDetail = () => {
                     </a>
                   </div>
                   
-                  {submission.status === 'pending' && (
+                  {/* Evaluation Results Section */}
+                  {submission.evaluationScore > 0 && (
+                    <div className="mt-4 border-t border-gray-700 pt-4">
+                      <h3 className="text-sm font-medium text-gray-300 mb-2">Evaluation Results</h3>
+                      <div className="bg-gray-700 p-4 rounded">
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="font-medium text-white">
+                            Score: {submission.evaluationScore}%
+                          </div>
+                          <div>
+                            {submission.autoApproved ? (
+                              <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                                Auto-Approved
+                              </span>
+                            ) : submission.evaluationScore >= (bug.autoApprovalThreshold || 90) ? (
+                              <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                                Meets Auto-Approval Threshold
+                              </span>
+                            ) : (
+                              <span className="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">
+                                Below Auto-Approval Threshold
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {submission.evaluationDetails && (
+                          <div className="mt-2">
+                            <button 
+                              onClick={() => toggleEvaluationDetails(submission._id)}
+                              className="text-primary hover:underline text-sm flex items-center"
+                            >
+                              {showEvaluationDetails[submission._id] ? 'Hide' : 'Show'} Evaluation Details
+                            </button>
+                            
+                            {showEvaluationDetails[submission._id] && (
+                              <div className="mt-3 bg-gray-800 p-3 rounded-md border border-gray-600 text-gray-200 max-h-64 overflow-y-auto">
+                                {renderEvaluationDetails(submission.evaluationDetails)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {submission.status === 'pending' && !submission.autoApproved && (
                     <div className="mt-4 pt-3 border-t border-gray-700 flex justify-end space-x-3">
                       <button 
                         className="btn btn-outline text-sm"
