@@ -1,6 +1,6 @@
 # PatchPay - Bug Bounty Platform
 
-[![Demo video]](https://www.youtube.com/watch?v=gtY00bJVLDM)
+[[Demo video]](https://www.youtube.com/watch?v=gtY00bJVLDM)
 ![Payman](frontend/src/assets/ss.png)
 
 PatchPay is a modern bug bounty platform connecting companies with security researchers to efficiently identify, fix, and reward vulnerability resolutions.
