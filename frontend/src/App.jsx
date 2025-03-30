@@ -18,7 +18,7 @@ import ApiKeyManagement from './pages/dashboard/ApiKeyManagement';
 import BugListings from './pages/dashboard/BugListings';
 import CreateBug from './pages/dashboard/CreateBug';
 import BugDetail from './pages/dashboard/BugDetail';
-import CreateSubmission from './pages/dashboard/CreateSubmission';
+import CreateSubmission from './pages/dashboard/createSubmission';
 import ResearcherSubmissions from './pages/dashboard/ResearcherSubmissions';
 import Notifications from './pages/dashboard/Notifications';
 import UserProfile from './pages/dashboard/UserProfile';
