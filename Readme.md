@@ -1,6 +1,6 @@
 # PatchPay - Bug Bounty Platform
 
-![PatchPay](src/assets/ss.png)
+![Payman](https://file%2B.vscode-resource.vscode-cdn.net/Users/hrishi0102/Developer/Projects/patchpay_v0/frontend/src/assets/ss.png?version%3D1743371243975)
 
 PatchPay is a modern bug bounty platform connecting companies with security researchers to efficiently identify, fix, and reward vulnerability resolutions.
 
