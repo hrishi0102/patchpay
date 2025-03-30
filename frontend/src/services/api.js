@@ -1,7 +1,8 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api';
+// Get the API URL from environment variables with fallback
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -20,6 +21,20 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for handling common errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle common errors like auth failures
+    if (error.response && error.response.status === 401) {
+      // Clear invalid auth data and redirect to login
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );

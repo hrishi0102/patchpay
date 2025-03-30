@@ -1,0 +1,10 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Disallow crawling of authentication pages
+Disallow: /login
+Disallow: /register
+
+# Disallow crawling of dashboard pages
+Disallow: /dashboard/
