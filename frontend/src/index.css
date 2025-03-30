@@ -39,3 +39,17 @@ body {
     @apply bg-dark-lighter p-6 rounded-lg border border-gray-700 shadow-lg;
   }
 }
+
+@keyframes loader-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader {
+  border: 3px solid rgba(16, 185, 129, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid #10B981;
+  width: 30px;
+  height: 30px;
+  animation: loader-spin 1s linear infinite;
+}

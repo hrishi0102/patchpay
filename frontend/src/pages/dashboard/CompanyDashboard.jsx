@@ -1,25 +1,19 @@
-// src/pages/dashboard/CompanyDashboard.jsx (enhanced version)
+// src/pages/dashboard/CompanyDashboard.jsx
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaKey } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import LeaderboardWidget from '../../components/leaderboard/LeaderboardWidget';
+import CompanyLayout from '../../components/layout/CompanyLayout';
+import BugCard from '../../components/bugs/BugCard';
 import api from '../../services/api';
 
 const CompanyDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    activeBugs: 0,
-    pendingSubmissions: 0,
-    balance: 0
-  });
-  const [recentBugs, setRecentBugs] = useState([]);
+  const [bugs, setBugs] = useState([]);
   
-  // Fetch company data
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -29,196 +23,73 @@ const CompanyDashboard = () => {
       return;
     }
 
-    const fetchDashboardData = async () => {
-        try {
-          setLoading(true);
-          
-          // Fetch company bugs
-          const bugsResponse = await api.get('/bugs/company/list');
-          const bugs = bugsResponse.data;
-          
-          // Set recent bugs (most recent 3)
-          setRecentBugs(bugs.slice(0, 3));
-          
-          // Calculate active bugs (open or in_progress)
-          const activeBugs = bugs.filter(bug => 
-            bug.status === 'open' || bug.status === 'in_progress').length;
-          
-          // Count pending submissions for each bug
-          let pendingSubmissionsCount = 0;
-          for (const bug of bugs) {
-            try {
-              const submissionsResponse = await api.get(`/submissions/bug/${bug._id}`);
-              const pendingSubmissions = submissionsResponse.data.filter(
-                submission => submission.status === 'pending'
-              );
-              pendingSubmissionsCount += pendingSubmissions.length;
-            } catch (error) {
-              console.error(`Error fetching submissions for bug ${bug._id}:`, error);
-            }
-          }
-          
-          // Update stats with bug and submission counts
-          setStats(prev => ({
-            ...prev,
-            activeBugs,
-            pendingSubmissions: pendingSubmissionsCount
-          }));
-          
-          // Fetch balance if API key is set
-          if (user.paymanApiKey) {
-            try {
-              const balanceResponse = await api.get('/auth/balance');
-              
-              if (balanceResponse.data && typeof balanceResponse.data.balance === 'number') {
-                setStats(prev => ({
-                  ...prev,
-                  balance: balanceResponse.data.balance
-                }));
-              }
-            } catch (error) {
-              console.error('Error fetching balance:', error);
-              // Show a non-intrusive warning to the user
-              toast.error('Could not fetch wallet balance. Please check your API key.', {
-                duration: 4000,
-                position: 'bottom-right'
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching dashboard data:', error);
-          toast.error('Failed to load dashboard data');
-        } finally {
-          setLoading(false);
-        }
-      };
+    const fetchBugs = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/bugs/company/list');
+        setBugs(response.data);
+      } catch (error) {
+        console.error('Error fetching bugs:', error);
+        toast.error('Failed to load bug listings');
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    fetchDashboardData();
+    fetchBugs();
   }, [user, navigate]);
   
   if (!user) return null;
   
   return (
-    <DashboardLayout userRole="company">
-      <div className="space-y-6">
-        <div className="card">
-          <h2 className="text-2xl font-bold text-white mb-4">Company Overview</h2>
-          <p className="text-gray-300 mb-4">
-            Welcome to your company dashboard. Here you can post bug bounties, review submissions, and manage payments.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-              <div className="text-2xl font-bold text-white">
-                {loading ? '...' : stats.activeBugs}
-              </div>
-              <div className="text-gray-400">Active Bugs</div>
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-              <div className="text-2xl font-bold text-white">
-                {loading ? '...' : stats.pendingSubmissions}
-              </div>
-              <div className="text-gray-400">Pending Submissions</div>
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-            <div className="text-2xl font-bold text-white">
-                {loading ? (
-                <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent"></div>
-                ) : user.paymanApiKey ? (
-                `$${stats.balance.toFixed(2)}`
-                ) : (
-                'Not Available'
-                )}
-            </div>
-            <div className="text-gray-400">Balance</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-white">Recent Bug Posts</h2>
-            <Link to="/dashboard/company/bugs/create" className="btn btn-primary flex items-center">
-              <FaPlus className="mr-2" /> Post New Bug
-            </Link>
-          </div>
-          
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-            </div>
-          ) : recentBugs.length === 0 ? (
-            <p className="text-gray-400">No bug listings available yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {recentBugs.map(bug => (
-                <div key={bug._id} className="p-4 border border-gray-700 rounded-lg bg-gray-800">
-                  <div className="flex justify-between items-start">
-                    <Link to={`/dashboard/bugs/${bug._id}`} className="text-lg font-medium text-white hover:text-primary">
-                      {bug.title}
-                    </Link>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full text-white ${
-                      bug.severity === 'critical' ? 'bg-red-600' :
-                      bug.severity === 'high' ? 'bg-orange-600' :
-                      bug.severity === 'medium' ? 'bg-yellow-600' :
-                      'bg-blue-600'
-                    }`}>
-                      {bug.severity.charAt(0).toUpperCase() + bug.severity.slice(1)}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex justify-between items-center text-sm">
-                    <span className="text-gray-400">
-                      Status: <span className="capitalize">{bug.status}</span>
-                    </span>
-                    <span className="text-primary font-medium">${bug.reward.toFixed(2)}</span>
-                  </div>
-                </div>
-              ))}
-              
-              {recentBugs.length > 0 && (
-                <div className="text-center mt-4">
-                  <Link to="/dashboard/company/bugs" className="text-primary hover:underline">
-                    View all bugs
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Top Researchers</h2>
-            </div>
-            <LeaderboardWidget />
-          </div>
-          
-          {!user.paymanApiKey && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-yellow-600">
-              <h3 className="text-lg font-medium text-white mb-2">Action Required: API Key Missing</h3>
-              <p className="text-gray-300 mb-4">
-                You need to set up your PaymanAI API key before you can post bug bounties.
-              </p>
-              <Link to="/dashboard/company/api-key" className="btn btn-primary">
-                Set Up API Key
-              </Link>
-            </div>
-          )}
-        </div>
-        
-        {!user.paymanApiKey && (
-          <div className="bg-gray-800 p-6 rounded-lg border border-yellow-600">
-            <h3 className="text-lg font-medium text-white mb-2">Action Required: API Key Missing</h3>
-            <p className="text-gray-300 mb-4">
-              You need to set up your PaymanAI API key before you can post bug bounties.
-            </p>
-            <Link to="/dashboard/company/api-key" className="btn btn-primary">
-              Set Up API Key
-            </Link>
-          </div>
-        )}
+    <CompanyLayout>
+      <div className="mb-8 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-white">Bug Listings</h1>
+        <Link 
+          to="/dashboard/company/bugs/create" 
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center transition-colors"
+        >
+          <FaPlus className="mr-2" /> Post New Bug
+        </Link>
       </div>
-    </DashboardLayout>
+      
+      {/* API Key warning if needed - with added margin */}
+      {!user.paymanApiKey && (
+        <div className="mb-8 p-4 border border-yellow-600/50 bg-yellow-900/20 rounded-lg text-yellow-200">
+          <p className="flex items-center">
+            <FaKey className="mr-2" />
+            You need to set up your PaymanAI API key before posting bug bounties.
+            <Link to="/dashboard/company/api-key" className="ml-2 underline">
+              Set up now
+            </Link>
+          </p>
+        </div>
+      )}
+      
+      {/* Bug listings grid - with increased gap */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="loader"></div>
+        </div>
+      ) : bugs.length === 0 ? (
+        <div className="text-center py-20 bg-gray-900/20 border border-gray-800 rounded-lg">
+          <h3 className="text-xl font-medium text-white mb-3">No bug listings yet</h3>
+          <p className="text-gray-400 mb-8">Post your first bug to start receiving fixes from researchers</p>
+          <Link 
+            to="/dashboard/company/bugs/create" 
+            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg inline-flex items-center transition-colors"
+          >
+            <FaPlus className="mr-2" /> Post Your First Bug
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {bugs.map(bug => (
+            <BugCard key={bug._id} bug={bug} />
+          ))}
+        </div>
+      )}
+    </CompanyLayout>
   );
 };
 

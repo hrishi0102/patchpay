@@ -1,35 +1,25 @@
 // src/pages/dashboard/UserProfile.jsx
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaShieldAlt, FaWallet, FaKey, FaTrophy, FaChartLine } from 'react-icons/fa';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import { FaUser, FaEnvelope, FaShieldAlt, FaKey, FaWallet, FaBuilding, FaEdit } from 'react-icons/fa';
+import CompanyLayout from '../../components/layout/CompanyLayout';
+import ResearcherLayout from '../../components/layout/ResearcherLayout';
 import { profileService } from '../../services/profile.service';
-import { leaderboardService } from '../../services/leaderboard.service';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [reputationStats, setReputationStats] = useState(null);
   const { user } = useAuth();
+  const isCompany = user?.role === 'company';
   
   useEffect(() => {
-    const fetchProfileAndStats = async () => {
+    const fetchProfile = async () => {
       try {
         setLoading(true);
         const data = await profileService.getUserProfile();
         setProfile(data);
-        
-        // If user is a researcher, fetch reputation stats
-        if (data.role === 'researcher') {
-          try {
-            const rankData = await leaderboardService.getMyRank();
-            setReputationStats(rankData);
-          } catch (error) {
-            console.error('Error fetching reputation stats:', error);
-          }
-        }
       } catch (error) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load profile data');
@@ -38,51 +28,55 @@ const UserProfile = () => {
       }
     };
     
-    fetchProfileAndStats();
+    fetchProfile();
   }, []);
   
   if (loading) {
-    return (
-      <DashboardLayout userRole={user?.role}>
-        <div className="flex items-center justify-center min-h-screen -mt-16">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-            <p className="mt-4 text-gray-400">Loading profile...</p>
-          </div>
-        </div>
-      </DashboardLayout>
+    const LoadingContent = (
+      <div className="flex justify-center items-center py-20">
+        <div className="loader"></div>
+      </div>
+    );
+    
+    return isCompany ? (
+      <CompanyLayout>{LoadingContent}</CompanyLayout>
+    ) : (
+      <ResearcherLayout>{LoadingContent}</ResearcherLayout>
     );
   }
   
   if (!profile) {
-    return (
-      <DashboardLayout userRole={user?.role}>
-        <div className="card text-center py-12">
-          <p className="text-xl text-gray-400">Failed to load profile data. Please try again later.</p>
-        </div>
-      </DashboardLayout>
+    const ErrorContent = (
+      <div className="bg-gray-900/30 backdrop-blur-sm border border-emerald-900/30 rounded-lg p-8 text-center">
+        <p className="text-xl text-gray-400">Failed to load profile data. Please try again later.</p>
+      </div>
+    );
+    
+    return isCompany ? (
+      <CompanyLayout>{ErrorContent}</CompanyLayout>
+    ) : (
+      <ResearcherLayout>{ErrorContent}</ResearcherLayout>
     );
   }
   
-  const isCompany = user?.role === 'company';
-  
-  return (
-    <DashboardLayout userRole={user?.role}>
+  // Profile content - shared between both layouts
+  const profileContent = (
+    <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">My Profile</h1>
+        <h1 className="text-2xl font-bold text-white">Profile</h1>
         <p className="text-gray-400 mt-1">Manage your account details and settings</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Summary Card */}
-        <div className="card lg:col-span-1">
+        <div className="bg-gray-900/30 backdrop-blur-sm border border-emerald-900/30 rounded-lg overflow-hidden p-6">
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center mb-4">
-              <FaUser className="text-gray-300 text-4xl" />
+            <div className="w-24 h-24 rounded-full bg-emerald-900/20 flex items-center justify-center mb-4 border border-emerald-800/30">
+              <FaUser className="text-emerald-400 text-4xl" />
             </div>
             <h2 className="text-xl font-bold text-white mb-1">{profile.name}</h2>
             <p className="text-gray-400 mb-4">{profile.email}</p>
-            <div className="py-2 px-4 bg-gray-800 rounded-full text-sm text-primary font-medium">
+            <div className="py-2 px-4 bg-emerald-900/20 rounded-full text-sm text-emerald-400 font-medium border border-emerald-800/30">
               {isCompany ? 'Company Account' : 'Researcher Account'}
             </div>
           </div>
@@ -91,15 +85,21 @@ const UserProfile = () => {
             <h3 className="font-medium text-white mb-4">Account Information</h3>
             <ul className="space-y-3">
               <li className="flex items-center text-gray-300">
-                <FaEnvelope className="text-gray-500 mr-3" />
+                <div className="mr-3 p-2 bg-gray-800 rounded-full">
+                  <FaEnvelope className="text-gray-400" />
+                </div>
                 <span>{profile.email}</span>
               </li>
               <li className="flex items-center text-gray-300">
-                <FaShieldAlt className="text-gray-500 mr-3" />
+                <div className="mr-3 p-2 bg-gray-800 rounded-full">
+                  <FaShieldAlt className="text-gray-400" />
+                </div>
                 <span>Role: {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}</span>
               </li>
               <li className="flex items-center text-gray-300">
-                <FaUser className="text-gray-500 mr-3" />
+                <div className="mr-3 p-2 bg-gray-800 rounded-full">
+                  <FaBuilding className="text-gray-400" />
+                </div>
                 <span>Member since {new Date(profile.createdAt).toLocaleDateString()}</span>
               </li>
             </ul>
@@ -107,44 +107,51 @@ const UserProfile = () => {
         </div>
         
         {/* Details Card */}
-        <div className="card lg:col-span-2">
-          <h2 className="text-xl font-bold text-white mb-6">Account Details</h2>
+        <div className="bg-gray-900/30 backdrop-blur-sm border border-emerald-900/30 rounded-lg overflow-hidden p-6 lg:col-span-2">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-white">Account Details</h2>
+            <button className="px-3 py-1.5 bg-emerald-900/20 text-emerald-400 rounded-md border border-emerald-800/30 text-sm hover:bg-emerald-900/40 transition-colors">
+              <FaEdit className="inline mr-2" /> Edit Profile
+            </button>
+          </div>
           
           <div className="space-y-6">
             <div>
-              <h3 className="text-md font-medium text-white mb-2">Personal Information</h3>
-              <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
+              <h3 className="text-md font-medium text-white mb-3">Personal Information</h3>
+              <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-400">Full Name</p>
-                    <p className="text-gray-200">{profile.name}</p>
+                    <p className="text-gray-200 mt-1">{profile.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Email Address</p>
-                    <p className="text-gray-200">{profile.email}</p>
+                    <p className="text-gray-200 mt-1">{profile.email}</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            {isCompany ? (
+            {isCompany && (
               <div>
-                <h3 className="text-md font-medium text-white mb-2">Payman Integration</h3>
-                <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
+                <h3 className="text-md font-medium text-white mb-3">Payman Integration</h3>
+                <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
                   <div className="flex items-start">
-                    <FaKey className="text-gray-500 mt-1 mr-3" />
+                    <div className="mr-4 p-2 rounded-full bg-emerald-900/20 border border-emerald-800/30">
+                      <FaKey className="text-emerald-400" />
+                    </div>
                     <div>
                       <p className="text-gray-200 font-medium">
                         {profile.paymanApiKey ? 'API Key is set up' : 'API Key not configured'}
                       </p>
                       <p className="text-sm text-gray-400 mt-1">
                         {profile.paymanApiKey 
-                          ? 'Your Payman API key is securely stored.' 
+                          ? 'Your Payman API key is securely stored and ready for use.' 
                           : 'You need to add your Payman API key to post bug bounties.'}
                       </p>
                       <Link 
                         to="/dashboard/company/api-key" 
-                        className="text-primary hover:underline inline-block mt-2"
+                        className="text-emerald-400 hover:text-emerald-300 hover:underline inline-block mt-2"
                       >
                         {profile.paymanApiKey ? 'Update API Key' : 'Configure API Key'}
                       </Link>
@@ -152,12 +159,16 @@ const UserProfile = () => {
                   </div>
                 </div>
               </div>
-            ) : (
+            )}
+            
+            {!isCompany && (
               <div>
-                <h3 className="text-md font-medium text-white mb-2">Payment Information</h3>
-                <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
+                <h3 className="text-md font-medium text-white mb-3">Payment Information</h3>
+                <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
                   <div className="flex items-start">
-                    <FaWallet className="text-gray-500 mt-1 mr-3" />
+                    <div className="mr-4 p-2 rounded-full bg-emerald-900/20 border border-emerald-800/30">
+                      <FaWallet className="text-emerald-400" />
+                    </div>
                     <div>
                       <p className="text-gray-200 font-medium">
                         {profile.walletId ? 'Wallet ID: Connected' : 'Wallet ID: Not set up yet'}
@@ -173,68 +184,61 @@ const UserProfile = () => {
               </div>
             )}
             
-            {!isCompany && reputationStats && (
-              <div>
-                <h3 className="text-md font-medium text-white mb-2">Reputation & Stats</h3>
-                <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
-                  <div className="flex flex-col space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-400">Total Earnings</p>
-                        <p className="text-lg font-medium text-primary">
-                          ${reputationStats.researcher.totalEarnings.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {reputationStats.ranks.byEarnings ? `Rank #${reputationStats.ranks.byEarnings}` : ''}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-gray-400">Success Rate</p>
-                        <p className="text-lg font-medium text-primary">
-                          {reputationStats.researcher.successRate.toFixed(1)}%
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {reputationStats.ranks.bySuccessRate 
-                            ? `Rank #${reputationStats.ranks.bySuccessRate}` 
-                            : 'Need 3+ submissions for ranking'}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-gray-400">Submissions</p>
-                        <p className="text-lg font-medium text-primary">
-                          {reputationStats.researcher.successfulSubmissions} / {reputationStats.researcher.totalSubmissions}
-                        </p>
-                        <p className="text-xs text-gray-400">Successful / Total</p>
-                      </div>
-                    </div>
-                    
-                    <Link 
-                      to="/dashboard/researcher/leaderboard" 
-                      className="text-primary hover:underline inline-flex items-center"
-                    >
-                      <FaTrophy className="mr-1" /> View Leaderboard
-                    </Link>
+            <div>
+              <h3 className="text-md font-medium text-white mb-3">Account Security</h3>
+              <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-gray-200">Password Protection</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Your password is securely hashed and stored. For security reasons, passwords can only be reset, not viewed.
+                    </p>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
             
             <div>
-              <h3 className="text-md font-medium text-white mb-2">Account Security</h3>
-              <div className="bg-gray-800 p-4 rounded-md border border-gray-700">
-                <p className="text-gray-200">Password Protection</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  Your password is securely hashed and stored. For security reasons, passwords can only be reset, not viewed.
-                </p>
-                {/* You could add a password reset button here if you implement that feature */}
+              <h3 className="text-md font-medium text-white mb-3">Notifications</h3>
+              <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Email notifications</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Bug {isCompany ? 'submissions' : 'listings'}</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Payment notifications</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
+  );
+  
+  // Render with the appropriate layout based on user role
+  return isCompany ? (
+    <CompanyLayout>{profileContent}</CompanyLayout>
+  ) : (
+    <ResearcherLayout>{profileContent}</ResearcherLayout>
   );
 };
 

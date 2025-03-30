@@ -21,6 +21,9 @@ export default {
           lightest: '#4B5563',
         },
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
   plugins: [],

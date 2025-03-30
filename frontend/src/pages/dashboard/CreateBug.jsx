@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaSave, FaTimes } from 'react-icons/fa';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import { FaSave, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
+import CompanyLayout from '../../components/layout/CompanyLayout';
 import api from '../../services/api';
 
 const CreateBug = () => {
@@ -39,7 +39,7 @@ const CreateBug = () => {
     try {
       await api.post('/bugs', formData);
       toast.success('Bug listing created successfully');
-      navigate('/dashboard/company/bugs');
+      navigate('/dashboard/company');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to create bug listing';
       toast.error(errorMessage);
@@ -50,17 +50,17 @@ const CreateBug = () => {
   };
   
   const handleCancel = () => {
-    navigate('/dashboard/company/bugs');
+    navigate('/dashboard/company');
   };
   
   return (
-    <DashboardLayout userRole="company">
+    <CompanyLayout>
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-white">Post New Bug</h1>
       </div>
       
-      <div className="card">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-gray-900/30 backdrop-blur-sm border border-emerald-900/30 rounded-lg overflow-hidden">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
               Title *
@@ -70,7 +70,9 @@ const CreateBug = () => {
               name="title"
               type="text"
               required
-              className="input"
+              className="w-full px-4 py-2 bg-black/50 rounded-md border border-gray-700 
+                        text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 
+                        focus:ring-emerald-500 focus:border-transparent"
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Cross-Site Scripting Vulnerability in Login Form"
@@ -86,7 +88,9 @@ const CreateBug = () => {
               name="description"
               rows="6"
               required
-              className="input"
+              className="w-full px-4 py-2 bg-black/50 rounded-md border border-gray-700 
+                        text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 
+                        focus:ring-emerald-500 focus:border-transparent"
               value={formData.description}
               onChange={handleChange}
               placeholder="Provide detailed information about the vulnerability, including steps to reproduce and impact"
@@ -102,7 +106,9 @@ const CreateBug = () => {
                 id="severity"
                 name="severity"
                 required
-                className="input"
+                className="w-full px-4 py-2 bg-black/50 rounded-md border border-gray-700 
+                          text-gray-100 focus:outline-none focus:ring-2 
+                          focus:ring-emerald-500 focus:border-transparent"
                 value={formData.severity}
                 onChange={handleChange}
               >
@@ -124,7 +130,9 @@ const CreateBug = () => {
                 required
                 min="1"
                 step="0.01"
-                className="input"
+                className="w-full px-4 py-2 bg-black/50 rounded-md border border-gray-700 
+                          text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 
+                          focus:ring-emerald-500 focus:border-transparent"
                 value={formData.reward}
                 onChange={handleChange}
                 placeholder="e.g., 500"
@@ -136,21 +144,21 @@ const CreateBug = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="btn btn-outline flex items-center"
+              className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-800 flex items-center transition-colors"
             >
               <FaTimes className="mr-2" /> Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary flex items-center"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md flex items-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FaSave className="mr-2" /> {loading ? 'Saving...' : 'Save Bug Listing'}
             </button>
           </div>
         </form>
       </div>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 };
 

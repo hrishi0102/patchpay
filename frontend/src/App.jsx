@@ -26,6 +26,26 @@ import Leaderboard from './pages/dashboard/Leaderboard';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
+
+// Role-based Route Protection Component
+const RoleProtectedRoute = ({ element, allowedRole }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  
+  if (user.role !== allowedRole) {
+    return <Navigate to={`/dashboard/${user.role}`} />;
+  }
+  
+  return element;
+};
 
 function App() {
   return (
@@ -41,28 +61,26 @@ function App() {
             <Route path="register" element={<Register />} />
           </Route>
 
+          {/* Shared routes that use appropriate layout based on user role */}
           <Route path="/dashboard/leaderboard" element={<Leaderboard />} />
+          <Route path="/dashboard/bugs/:id" element={<BugDetail />} />
+          <Route path="/dashboard/notifications" element={<Notifications />} />
+          <Route path="/dashboard/profile" element={<UserProfile />} />
           
-          {/* Protected company routes */}
+          {/* Company routes */}
           <Route path="/dashboard/company" element={<CompanyDashboard />} />
           <Route path="/dashboard/company/api-key" element={<ApiKeyManagement />} />
-          <Route path="/dashboard/company/bugs" element={<BugListings />} />
+          <Route path="/dashboard/company/bugs" element={<BugListings userRole="company" />} />
           <Route path="/dashboard/company/bugs/create" element={<CreateBug />} />
           <Route path="/dashboard/company/notifications" element={<Notifications />} />
           <Route path="/dashboard/company/profile" element={<UserProfile />} />
-          <Route path="/dashboard/company/leaderboard" element={<Leaderboard />} />
           
-          {/* Protected researcher routes */}
+          {/* Researcher routes */}
           <Route path="/dashboard/researcher" element={<ResearcherDashboard />} />
-          <Route path="/dashboard/researcher/bugs" element={<BugListings />} />
           <Route path="/dashboard/researcher/submissions" element={<ResearcherSubmissions />} />
           <Route path="/dashboard/researcher/submissions/create" element={<CreateSubmission />} />
           <Route path="/dashboard/researcher/notifications" element={<Notifications />} />
           <Route path="/dashboard/researcher/profile" element={<UserProfile />} />
-          <Route path="/dashboard/researcher/leaderboard" element={<Leaderboard />} />
-          
-          {/* Shared routes that work for both user types */}
-          <Route path="/dashboard/bugs/:id" element={<BugDetail />} />
         </Routes>
       </Router>
     </AuthProvider>
