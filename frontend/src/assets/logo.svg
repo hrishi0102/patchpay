@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Background Shield -->
+  <path d="M60 15 L100 35 V75 C100 90 82 100 60 110 C38 100 20 90 20 75 V35 L60 15Z" fill="#0F172A" />
+  
+  <!-- Bug Symbol -->
+  <circle cx="60" cy="60" r="25" fill="#10B981" />
+  
+  <!-- Check Mark / Bug Fix -->
+  <path d="M45 60 L55 70 L75 50" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  
+  <!-- Circuit Pattern -->
+  <path d="M60 15 L60 35 M40 35 L20 35 M80 35 L100 35" stroke="#10B981" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+  
+  <!-- Bottom Circuit Elements -->
+  <path d="M60 85 L60 105 M30 75 L20 80 M90 75 L100 80" stroke="#10B981" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+</svg>

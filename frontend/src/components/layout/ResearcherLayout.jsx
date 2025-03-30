@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaClipboardCheck, FaTrophy, FaBell, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import logoSvg from '../../assets/logo.svg';
 
 const ResearcherLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -23,11 +24,7 @@ const ResearcherLayout = ({ children }) => {
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/dashboard/researcher" className="flex items-center">
-                <img
-                  src="/src/assets/patchpay.png"
-                  alt="PatchPay Logo"
-                  className="h-8 w-auto"
-                />
+              <img src={logoSvg} alt="PatchPay Logo" className="h-8 w-auto" />
                 <span className="ml-2 text-xl font-bold text-white">PatchPay</span>
               </Link>
             </div>

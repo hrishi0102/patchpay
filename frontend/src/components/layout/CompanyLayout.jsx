@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaKey, FaTrophy, FaBell, FaUserCircle, FaSignOutAlt, FaPlus, FaInbox } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import logoSvg from '../../assets/logo.svg';
 
 const CompanyLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -68,11 +69,7 @@ const CompanyLayout = ({ children }) => {
             {/* Logo and Company Label */}
             <div className="flex items-center">
               <Link to="/dashboard/company" className="flex items-center">
-                <img
-                  src="/src/assets/patchpay.png"
-                  alt="PatchPay Logo"
-                  className="h-8 w-auto"
-                />
+              <img src={logoSvg} alt="PatchPay Logo" className="h-8 w-auto" />
                 <span className="ml-2 text-xl font-bold text-white">PatchPay</span>
               </Link>
               <span className="ml-2 text-xs uppercase tracking-wider text-emerald-500 font-light border-l border-emerald-900/50 pl-2">

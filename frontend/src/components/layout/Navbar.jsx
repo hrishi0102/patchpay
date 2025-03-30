@@ -1,6 +1,7 @@
 // src/components/layout/Navbar.jsx
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import logoSvg from '../../assets/logo.svg';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -11,11 +12,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
           {/* Larger logo and brand name */}
           <Link to="/" className="flex items-center space-x-3">
-            <img
-              src="/src/assets/patchpay.png"
-              alt="PatchPay Logo"
-              className="h-10 w-auto" // Increased size
-            />
+          <img src={logoSvg} alt="PatchPay Logo" className="h-10 w-auto" />
             <span className="text-2xl font-bold bg-clip-text text-white">
               PatchPay
             </span>
