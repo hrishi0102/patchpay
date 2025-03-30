@@ -1,18 +1,63 @@
 // src/components/layout/CompanyLayout.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaKey, FaTrophy, FaBell, FaUserCircle, FaSignOutAlt, FaPlus } from 'react-icons/fa';
+import { FaKey, FaTrophy, FaBell, FaUserCircle, FaSignOutAlt, FaPlus, FaInbox } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const CompanyLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
   
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+  
+  // Fetch notification and submission counts
+  useEffect(() => {
+    const fetchCounts = async () => {
+      if (!user) return;
+      
+      try {
+        // Fetch unread notifications
+        const notificationsResponse = await api.get('/notifications');
+        const unreadCount = notificationsResponse.data.filter(n => !n.isRead).length;
+        setUnreadNotifications(unreadCount);
+        
+        // Fetch bugs to check for pending submissions
+        const bugsResponse = await api.get('/bugs/company/list');
+        const inProgressBugs = bugsResponse.data.filter(bug => bug.status === 'in_progress');
+        
+        // Count pending submissions
+        let pendingCount = 0;
+        for (const bug of inProgressBugs) {
+          try {
+            const submissionsResponse = await api.get(`/submissions/bug/${bug._id}`);
+            pendingCount += submissionsResponse.data.filter(
+              submission => submission.status === 'pending'
+            ).length;
+          } catch (error) {
+            console.error(`Error fetching submissions for bug ${bug._id}:`, error);
+          }
+        }
+        
+        setPendingSubmissions(pendingCount);
+      } catch (error) {
+        console.error('Error fetching counts:', error);
+      }
+    };
+    
+    fetchCounts();
+    
+    // Set up refresh interval (every 5 minutes)
+    const intervalId = setInterval(fetchCounts, 5 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
+  }, [user]);
   
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -46,6 +91,20 @@ const CompanyLayout = ({ children }) => {
                 <span>Post Bug</span>
               </Link>
               
+              {/* Pending Submissions Icon */}
+              {pendingSubmissions > 0 && (
+                <Link
+                  to="/dashboard/company"
+                  className="text-yellow-400 hover:text-yellow-300 transition-colors p-1 relative"
+                  title={`${pendingSubmissions} Pending Submission${pendingSubmissions !== 1 ? 's' : ''}`}
+                >
+                  <FaInbox size={18} />
+                  <span className="absolute -top-1 -right-1 bg-yellow-500 text-xs text-black font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                    {pendingSubmissions > 9 ? '9+' : pendingSubmissions}
+                  </span>
+                </Link>
+              )}
+              
               {/* API Key Icon */}
               <Link
                 to="/dashboard/company/api-key"
@@ -71,10 +130,11 @@ const CompanyLayout = ({ children }) => {
                 title="Notifications"
               >
                 <FaBell size={18} />
-                {/* Notification counter - conditionally shown */}
-                <span className="absolute -top-1 -right-1 bg-emerald-500 text-xs text-white w-4 h-4 flex items-center justify-center rounded-full">
-                  2
-                </span>
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-xs text-white w-4 h-4 flex items-center justify-center rounded-full">
+                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                  </span>
+                )}
               </Link>
               
               {/* Profile Dropdown */}
