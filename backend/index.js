@@ -11,7 +11,7 @@ const connectDB = require('./db');
 const authRoutes = require('./routes/authRoutes');
 const bugRoutes = require('./routes/bugRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
+const notificationRoutes = require('./routes/notificationroutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
 const githubRoutes = require('./routes/githubRoutes');
 
